@@ -1,3 +1,4 @@
+from pickle import FALSE
 import pygame
 import os
 from pygame.locals import (
@@ -22,6 +23,7 @@ FPS = 60
 WIDTH, HEIGHT = 900, 500
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
 BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join("Assets","space.png")), (WIDTH, HEIGHT))
+ENDGAME = False
 
 # Color variables
 WHITE = (255, 255, 255)
@@ -118,10 +120,13 @@ def draw_info(list_InfoUpdate=None):
     if list_InfoUpdate != None:
         if 0 in list_InfoUpdate:
             if list_InfoUpdate[0] == 0:
-                WINNER_INFO = WINNER_FONT.render( f"WINNER IS YELLOW SPACESHIP!!!", 1, WHITE)
+                WINNER_INFO = WINNER_FONT.render( f"YELLOW WIN!!!", 1, WHITE)
             else:
-                WINNER_INFO = WINNER_FONT.render( f"WINNER IS RED SPACESHIP!!!", 1, WHITE )
-            WINDOW.blit(WINNER_INFO, ((WIDTH - WINNER_INFO.get_width())//2, (HEIGHT - WINNER_INFO.get_height())//2))            
+                WINNER_INFO = WINNER_FONT.render( f"RED WIN!!!", 1, WHITE )
+            WINDOW.blit(WINNER_INFO, ((WIDTH - WINNER_INFO.get_width())//2, (HEIGHT - WINNER_INFO.get_height())//2))     
+            pygame.time.delay(5000)
+            ENDGAME = True
+
         else:
             HEALTH_INFO_1 = HP_FONT.render( f"HEALTH: {list_InfoUpdate[0]}", 1, WHITE )
             HEALTH_INFO_2 = HP_FONT.render( f"HEALTH: {list_InfoUpdate[1]}", 1, WHITE )        
@@ -136,7 +141,8 @@ def draw_bullet(bullets, color):
 def main():
     # Setup new game
     clock = pygame.time.Clock()
-    run = True    
+    run = True
+    ENDGAME = False    
     RedSpaceShip = SpaceShip(RED, (100, 250, 90), "spaceship_red.png", 8)  # (100, 250, 90) => x = 100, y = 250, rotation angle = 90 degree
     YellowSpaceShip = SpaceShip(YELLOW, (700, 250, 270), "spaceship_yellow.png")    
     VisualUpdates = (RedSpaceShip.VisualUpdate, YellowSpaceShip.VisualUpdate)        
@@ -145,6 +151,8 @@ def main():
     # Run game
     while run:
         clock.tick(FPS)                            
+        if ENDGAME:
+            break
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -166,6 +174,7 @@ def main():
         InfoUpdates = [RedSpaceShip.health, YellowSpaceShip.health]
         draw_objects(VisualUpdates, InfoUpdates, EffectUpdates)        
 
+    main()
 
 if __name__ == "__main__":
     main()    
