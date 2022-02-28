@@ -19,17 +19,18 @@ pygame.init()
 pygame.font.init()
 pygame.mixer.init()
 
-# Setup window
-FPS = 60
-WIDTH, HEIGHT = 900, 500
-WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
-BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join("Assets","space.png")), (WIDTH, HEIGHT))
-
 # Color variables
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
+
+# Setup window
+FPS = 60
+WIDTH, HEIGHT = 900, 500
+WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
+BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join("Assets","space.png")), (WIDTH, HEIGHT))
+BORDER = pygame.Rect(WIDTH//2 - 5, 0, 10, HEIGHT)
 
 # Font variables
 HP_FONT = pygame.font.SysFont("comicsans", 40)
@@ -48,8 +49,8 @@ for i in range(1,6):
     img = pygame.transform.scale(img, (50,50))
     EXPLOSION_VISUAL.append(img)
 def draw_explosion(position):
-    for img in EXPLOSION_VISUAL:
-        WINDOW.blit(img, position)
+    for img in EXPLOSION_VISUAL:          
+        WINDOW.blit(img, position)        
 
 # Objects
 class SpaceShip():
@@ -65,6 +66,7 @@ class SpaceShip():
         self.velocity = vel
         self.VisualUpdate = (self.spaceShip, self.position)        
         self.BulletVel = bulletVel
+        self.damaged_event = 0
                 
     
     def build_spaceShip(self, imageName, position):
@@ -81,6 +83,7 @@ class SpaceShip():
 
     def got_hit(self, damage):
         EXPLOSION_SOUND.play()
+        pygame.event.post(pygame.event.Event(self.damaged_event))                
         self.health -= damage                
 
     def aim_target(self, opponent):
@@ -104,14 +107,14 @@ class SpaceShip():
         if self.headDirection:             
             if key_pressed[K_a] and self.position[0] - self.velocity > 10:
                 self.position[0] -= self.velocity                
-            if key_pressed[K_d] and self.position[0] + self.velocity < WIDTH - self.shipSize[0] + 5:
+            if key_pressed[K_d] and self.position[0] + self.velocity < WIDTH//2 - self.shipSize[0] + 5:
                 self.position[0] += self.velocity            
             if key_pressed[K_s] and self.position[1] + self.velocity < HEIGHT - self.shipSize[1] - 10:
                 self.position[1] += self.velocity
             if key_pressed[K_w] and self.position[1] - self.velocity > 5:                
                 self.position[1] -= self.velocity            
         else:        
-            if key_pressed[K_LEFT] and self.position[0] - self.velocity > 10:
+            if key_pressed[K_LEFT] and self.position[0] - self.velocity > WIDTH//2 + 10:
                 self.position[0] -= self.velocity
             if key_pressed[K_RIGHT] and self.position[0] + self.velocity < WIDTH - self.shipSize[0] + 5:
                 self.position[0] += self.velocity            
@@ -123,24 +126,26 @@ class SpaceShip():
         self.spaceShipBox = pygame.Rect(tuple(self.position), self.shipSize)                
         
 # Functions
-def draw_objects(list_Objects=None):    
+def draw_objects(list_Objects=None):        
     WINDOW.blit(BACKGROUND, (0, 0))
+    pygame.draw.rect(WINDOW, WHITE, BORDER)
+    
     if list_Objects != None:        
         draw_bullet(list_Objects[0].bullets, RED)
         draw_bullet(list_Objects[1].bullets, YELLOW)
     
         WINDOW.blits((list_Objects[0].VisualUpdate, list_Objects[1].VisualUpdate))
-        draw_info(list_Objects)    
+        draw_info(list_Objects)        
     pygame.display.update()
 
 def draw_info(list_InfoUpdate=None):    
     if list_InfoUpdate != None:        
         if 0 in [list_InfoUpdate[0].health, list_InfoUpdate[1].health]:
             if list_InfoUpdate[0].health == 0:
-                draw_explosion(list_InfoUpdate[0].position)
+                draw_explosion(list_InfoUpdate[0].position)                                       
                 WINNER_INFO = WINNER_FONT.render( f"YELLOW WIN!!!", 1, WHITE)                
             else:
-                draw_explosion(list_InfoUpdate[1].position)
+                draw_explosion(list_InfoUpdate[1].position)                
                 WINNER_INFO = WINNER_FONT.render( f"RED WIN!!!", 1, WHITE )                
             WINDOW.blit(WINNER_INFO, ((WIDTH - WINNER_INFO.get_width())//2, (HEIGHT - WINNER_INFO.get_height())//2))                        
 
@@ -160,12 +165,14 @@ def main():
     clock = pygame.time.Clock()
     run = True    
     RedSpaceShip = SpaceShip(RED, (100, 250, 90), "spaceship_red.png")  # (100, 250, 90) => x = 100, y = 250, rotation angle = 90 degree
-    YellowSpaceShip = SpaceShip(YELLOW, (700, 250, 270), "spaceship_yellow.png")    
+    RedSpaceShip.damaged_event = pygame.USEREVENT + 1
+    YellowSpaceShip = SpaceShip(YELLOW, (700, 250, 270), "spaceship_yellow.png", bullets=6)    
+    YellowSpaceShip.damaged_event = pygame.USEREVENT + 2
     VisualUpdates = (RedSpaceShip, YellowSpaceShip)            
 
     # Run game
     while run:
-        clock.tick(FPS)                                    
+        clock.tick(FPS)                                   
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -176,6 +183,15 @@ def main():
                     RedSpaceShip.shooting()
                 if event.key == K_KP_0:
                     YellowSpaceShip.shooting()
+            
+            if event.type == RedSpaceShip.damaged_event:
+                print("Red got hit")
+                draw_explosion(tuple(RedSpaceShip.position))
+                
+            
+            if event.type == YellowSpaceShip.damaged_event:
+                print("Yello got hit")
+                draw_explosion(tuple(YellowSpaceShip.position))                
 
         RedSpaceShip.aim_target(YellowSpaceShip)
         YellowSpaceShip.aim_target(RedSpaceShip)
