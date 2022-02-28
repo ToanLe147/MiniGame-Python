@@ -37,7 +37,7 @@ WINNER_FONT = pygame.font.SysFont("comicsans", 100)
 
 # Objects
 class SpaceShip():
-    def __init__(self, color, position, image, health=10, bullets=5, vel=5, shipSize=(60,50)):        
+    def __init__(self, color, position, image, health=10, bullets=3, bulletVel=10, vel=5, shipSize=(60,50)):        
         self.shipSize = shipSize   
         self.headDirection = (True if 0 < position[2] < 180 else False)                
         self.health = health
@@ -48,7 +48,7 @@ class SpaceShip():
         self.bullets = []
         self.velocity = vel
         self.VisualUpdate = (self.spaceShip, self.position)
-        self.OpponentBulletVel = self.velocity*2
+        self.BulletVel = bulletVel
                 
     
     def build_spaceShip(self, imageName, position):
@@ -57,27 +57,30 @@ class SpaceShip():
 
     def shooting(self):
         BULLET = pygame.Rect(
-            self.position[0] + self.shipSize[0], self.position[1] + self.shipSize[1]//2, 10, 5
+            self.position[0] + self.shipSize[0]//2, self.position[1] + self.shipSize[1]//2, 10, 5
         )        
         if len(self.bullets) < self.maxBullets:
-            self.bullets.append(BULLET)                                    
+            self.bullets.append(BULLET)         
 
-    def got_hit(self, opponent_bullets):
-        for bullet in opponent_bullets:
+    def got_hit(self, damage):
+        self.health -= damage        
+
+    def aim_target(self, opponent):
+        for bullet in self.bullets:
             if self.headDirection:
-                bullet.x -= self.OpponentBulletVel
-                if self.spaceShipBox.colliderect(bullet):
-                    self.health -= 1
-                    opponent_bullets.remove(bullet)
-                elif bullet.x < 0:            
-                    opponent_bullets.remove(bullet)
-            else:
-                bullet.x += self.OpponentBulletVel
-                if self.spaceShipBox.colliderect(bullet):
-                    self.health -= 1
-                    opponent_bullets.remove(bullet)
+                bullet.x += self.BulletVel
+                if opponent.spaceShipBox.colliderect(bullet):
+                    opponent.got_hit(1)
+                    self.bullets.remove(bullet)
                 elif bullet.x > WIDTH:            
-                    opponent_bullets.remove(bullet)                
+                    self.bullets.remove(bullet)
+            else:
+                bullet.x -= self.BulletVel
+                if opponent.spaceShipBox.colliderect(bullet):
+                    opponent.got_hit(1)
+                    self.bullets.remove(bullet)
+                elif bullet.x < 0:            
+                    self.bullets.remove(bullet)                
 
     def control(self, key_pressed):
         if self.headDirection:             
@@ -88,9 +91,7 @@ class SpaceShip():
             if key_pressed[K_s] and self.position[1] + self.velocity < HEIGHT - self.shipSize[1] - 10:
                 self.position[1] += self.velocity
             if key_pressed[K_w] and self.position[1] - self.velocity > 5:                
-                self.position[1] -= self.velocity
-            if key_pressed[K_f]:
-                self.shooting
+                self.position[1] -= self.velocity            
         else:        
             if key_pressed[K_LEFT] and self.position[0] - self.velocity > 10:
                 self.position[0] -= self.velocity
@@ -99,28 +100,33 @@ class SpaceShip():
             if key_pressed[K_DOWN] and self.position[1] + self.velocity < HEIGHT - self.shipSize[1] - 10:
                 self.position[1] += self.velocity
             if key_pressed[K_UP] and self.position[1] - self.velocity > 5:
-                self.position[1] -= self.velocity
-            if key_pressed[K_KP_0]:
-                self.shooting
+                self.position[1] -= self.velocity            
             
         self.spaceShipBox = pygame.Rect(tuple(self.position), self.shipSize)                
         
 # Functions
 def draw_objects(list_VisUpdate=None, list_InfoUpdate=None, list_EffectUpdate=None):    
     WINDOW.blit(BACKGROUND, (0, 0))
-    if list_VisUpdate != None:        
-        WINDOW.blits(list_VisUpdate)
-    draw_info(list_InfoUpdate)
     draw_bullet(list_EffectUpdate[0], RED)
     draw_bullet(list_EffectUpdate[1], YELLOW)
+    if list_VisUpdate != None:        
+        WINDOW.blits(list_VisUpdate)
+    draw_info(list_InfoUpdate)    
     pygame.display.update()
 
 def draw_info(list_InfoUpdate=None):    
     if list_InfoUpdate != None:
-        HEALTH_INFO_1 = HP_FONT.render( f"HEALTH: {list_InfoUpdate[0]}", 1, WHITE )
-        HEALTH_INFO_2 = HP_FONT.render( f"HEALTH: {list_InfoUpdate[1]}", 1, WHITE )        
-        WINDOW.blit(HEALTH_INFO_1, (10, 10))
-        WINDOW.blit(HEALTH_INFO_2, (WIDTH - HEALTH_INFO_2.get_width(), 10))
+        if 0 in list_InfoUpdate:
+            if list_InfoUpdate[0] == 0:
+                WINNER_INFO = WINNER_FONT.render( f"WINNER IS YELLOW SPACESHIP!!!", 1, WHITE)
+            else:
+                WINNER_INFO = WINNER_FONT.render( f"WINNER IS RED SPACESHIP!!!", 1, WHITE )
+            WINDOW.blit(WINNER_INFO, ((WIDTH - WINNER_INFO.get_width())//2, (HEIGHT - WINNER_INFO.get_height())//2))            
+        else:
+            HEALTH_INFO_1 = HP_FONT.render( f"HEALTH: {list_InfoUpdate[0]}", 1, WHITE )
+            HEALTH_INFO_2 = HP_FONT.render( f"HEALTH: {list_InfoUpdate[1]}", 1, WHITE )        
+            WINDOW.blit(HEALTH_INFO_1, (10, 10))
+            WINDOW.blit(HEALTH_INFO_2, (WIDTH - HEALTH_INFO_2.get_width(), 10))
 
 def draw_bullet(bullets, color):
     for bullet in bullets:
@@ -133,25 +139,31 @@ def main():
     run = True    
     RedSpaceShip = SpaceShip(RED, (100, 250, 90), "spaceship_red.png", 8)  # (100, 250, 90) => x = 100, y = 250, rotation angle = 90 degree
     YellowSpaceShip = SpaceShip(YELLOW, (700, 250, 270), "spaceship_yellow.png")    
-    VisualUpdates = (RedSpaceShip.VisualUpdate, YellowSpaceShip.VisualUpdate)    
-    InfoUpdates = (RedSpaceShip.health, YellowSpaceShip.health)    
+    VisualUpdates = (RedSpaceShip.VisualUpdate, YellowSpaceShip.VisualUpdate)        
     EffectUpdates = (RedSpaceShip.bullets, YellowSpaceShip.bullets)
 
     # Run game
     while run:
-        clock.tick(FPS)                
+        clock.tick(FPS)                            
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-                pygame.quit()            
+                pygame.quit()
 
-        RedSpaceShip.got_hit(YellowSpaceShip.bullets)
-        YellowSpaceShip.got_hit(RedSpaceShip.bullets)
+            if event.type == pygame.KEYDOWN:
+                if event.key == K_f:
+                    RedSpaceShip.shooting()
+                if event.key == K_KP_0:
+                    YellowSpaceShip.shooting()
+
+        RedSpaceShip.aim_target(YellowSpaceShip)
+        YellowSpaceShip.aim_target(RedSpaceShip)
 
         keypressed = pygame.key.get_pressed()
         RedSpaceShip.control(keypressed)
         YellowSpaceShip.control(keypressed)
-        
+
+        InfoUpdates = [RedSpaceShip.health, YellowSpaceShip.health]
         draw_objects(VisualUpdates, InfoUpdates, EffectUpdates)        
 
 
