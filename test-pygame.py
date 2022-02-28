@@ -17,13 +17,13 @@ from pygame.locals import (
 # Initialize
 pygame.init()
 pygame.font.init()
+pygame.mixer.init()
 
 # Setup window
 FPS = 60
 WIDTH, HEIGHT = 900, 500
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
 BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join("Assets","space.png")), (WIDTH, HEIGHT))
-ENDGAME = False
 
 # Color variables
 WHITE = (255, 255, 255)
@@ -37,6 +37,20 @@ INFO_FONT = pygame.font.SysFont("comicsans", 80)
 WARN_FONT = pygame.font.SysFont("comicsans", 100)
 WINNER_FONT = pygame.font.SysFont("comicsans", 100)
 
+# Sound effects
+FIRE_SOUND = pygame.mixer.Sound(os.path.join("Assets","Gun+Silencer.mp3"))
+EXPLOSION_SOUND = pygame.mixer.Sound(os.path.join("Assets","Grenade+1.mp3"))
+
+# Explosion effects
+EXPLOSION_VISUAL = []
+for i in range(1,6):
+    img = pygame.image.load(os.path.join("Assets",f"exp{i}.png"))
+    img = pygame.transform.scale(img, (50,50))
+    EXPLOSION_VISUAL.append(img)
+def draw_explosion(position):
+    for img in EXPLOSION_VISUAL:
+        WINDOW.blit(img, position)
+
 # Objects
 class SpaceShip():
     def __init__(self, color, position, image, health=10, bullets=3, bulletVel=10, vel=5, shipSize=(60,50)):        
@@ -49,7 +63,7 @@ class SpaceShip():
         self.maxBullets = bullets
         self.bullets = []
         self.velocity = vel
-        self.VisualUpdate = (self.spaceShip, self.position)
+        self.VisualUpdate = (self.spaceShip, self.position)        
         self.BulletVel = bulletVel
                 
     
@@ -62,10 +76,12 @@ class SpaceShip():
             self.position[0] + self.shipSize[0]//2, self.position[1] + self.shipSize[1]//2, 10, 5
         )        
         if len(self.bullets) < self.maxBullets:
-            self.bullets.append(BULLET)         
+            self.bullets.append(BULLET) 
+            FIRE_SOUND.play()  
 
     def got_hit(self, damage):
-        self.health -= damage        
+        EXPLOSION_SOUND.play()
+        self.health -= damage                
 
     def aim_target(self, opponent):
         for bullet in self.bullets:
@@ -107,29 +123,30 @@ class SpaceShip():
         self.spaceShipBox = pygame.Rect(tuple(self.position), self.shipSize)                
         
 # Functions
-def draw_objects(list_VisUpdate=None, list_InfoUpdate=None, list_EffectUpdate=None):    
+def draw_objects(list_Objects=None):    
     WINDOW.blit(BACKGROUND, (0, 0))
-    draw_bullet(list_EffectUpdate[0], RED)
-    draw_bullet(list_EffectUpdate[1], YELLOW)
-    if list_VisUpdate != None:        
-        WINDOW.blits(list_VisUpdate)
-    draw_info(list_InfoUpdate)    
+    if list_Objects != None:        
+        draw_bullet(list_Objects[0].bullets, RED)
+        draw_bullet(list_Objects[1].bullets, YELLOW)
+    
+        WINDOW.blits((list_Objects[0].VisualUpdate, list_Objects[1].VisualUpdate))
+        draw_info(list_Objects)    
     pygame.display.update()
 
 def draw_info(list_InfoUpdate=None):    
-    if list_InfoUpdate != None:
-        if 0 in list_InfoUpdate:
-            if list_InfoUpdate[0] == 0:
-                WINNER_INFO = WINNER_FONT.render( f"YELLOW WIN!!!", 1, WHITE)
+    if list_InfoUpdate != None:        
+        if 0 in [list_InfoUpdate[0].health, list_InfoUpdate[1].health]:
+            if list_InfoUpdate[0].health == 0:
+                draw_explosion(list_InfoUpdate[0].position)
+                WINNER_INFO = WINNER_FONT.render( f"YELLOW WIN!!!", 1, WHITE)                
             else:
-                WINNER_INFO = WINNER_FONT.render( f"RED WIN!!!", 1, WHITE )
-            WINDOW.blit(WINNER_INFO, ((WIDTH - WINNER_INFO.get_width())//2, (HEIGHT - WINNER_INFO.get_height())//2))     
-            pygame.time.delay(5000)
-            ENDGAME = True
+                draw_explosion(list_InfoUpdate[1].position)
+                WINNER_INFO = WINNER_FONT.render( f"RED WIN!!!", 1, WHITE )                
+            WINDOW.blit(WINNER_INFO, ((WIDTH - WINNER_INFO.get_width())//2, (HEIGHT - WINNER_INFO.get_height())//2))                        
 
         else:
-            HEALTH_INFO_1 = HP_FONT.render( f"HEALTH: {list_InfoUpdate[0]}", 1, WHITE )
-            HEALTH_INFO_2 = HP_FONT.render( f"HEALTH: {list_InfoUpdate[1]}", 1, WHITE )        
+            HEALTH_INFO_1 = HP_FONT.render( f"HEALTH: {list_InfoUpdate[0].health}", 1, WHITE )
+            HEALTH_INFO_2 = HP_FONT.render( f"HEALTH: {list_InfoUpdate[1].health}", 1, WHITE )        
             WINDOW.blit(HEALTH_INFO_1, (10, 10))
             WINDOW.blit(HEALTH_INFO_2, (WIDTH - HEALTH_INFO_2.get_width(), 10))
 
@@ -141,18 +158,14 @@ def draw_bullet(bullets, color):
 def main():
     # Setup new game
     clock = pygame.time.Clock()
-    run = True
-    ENDGAME = False    
-    RedSpaceShip = SpaceShip(RED, (100, 250, 90), "spaceship_red.png", 8)  # (100, 250, 90) => x = 100, y = 250, rotation angle = 90 degree
+    run = True    
+    RedSpaceShip = SpaceShip(RED, (100, 250, 90), "spaceship_red.png")  # (100, 250, 90) => x = 100, y = 250, rotation angle = 90 degree
     YellowSpaceShip = SpaceShip(YELLOW, (700, 250, 270), "spaceship_yellow.png")    
-    VisualUpdates = (RedSpaceShip.VisualUpdate, YellowSpaceShip.VisualUpdate)        
-    EffectUpdates = (RedSpaceShip.bullets, YellowSpaceShip.bullets)
+    VisualUpdates = (RedSpaceShip, YellowSpaceShip)            
 
     # Run game
     while run:
-        clock.tick(FPS)                            
-        if ENDGAME:
-            break
+        clock.tick(FPS)                                    
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -170,12 +183,14 @@ def main():
         keypressed = pygame.key.get_pressed()
         RedSpaceShip.control(keypressed)
         YellowSpaceShip.control(keypressed)
-
+        
+        draw_objects(VisualUpdates)
         InfoUpdates = [RedSpaceShip.health, YellowSpaceShip.health]
-        draw_objects(VisualUpdates, InfoUpdates, EffectUpdates)        
+        if 0 in InfoUpdates:
+            pygame.time.wait(2000)
+            break        
 
     main()
 
 if __name__ == "__main__":
-    main()    
-          
+    main()
