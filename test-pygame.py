@@ -1,3 +1,4 @@
+from cmath import nan
 from pickle import FALSE
 import pygame
 import os
@@ -13,6 +14,8 @@ from pygame.locals import (
     K_d,
     K_w,
 )
+
+from test_expolsion import Explosion
 
 # Initialize
 pygame.init()
@@ -48,9 +51,6 @@ for i in range(1,6):
     img = pygame.image.load(os.path.join("Assets",f"exp{i}.png"))
     img = pygame.transform.scale(img, (50,50))
     EXPLOSION_VISUAL.append(img)
-def draw_explosion(position):
-    for img in EXPLOSION_VISUAL:          
-        WINDOW.blit(img, position)        
 
 # Objects
 class SpaceShip():
@@ -64,9 +64,10 @@ class SpaceShip():
         self.maxBullets = bullets
         self.bullets = []
         self.velocity = vel
-        self.VisualUpdate = (self.spaceShip, self.position)        
+        self.VisualUpdate = (self.spaceShip, self.position)  
         self.BulletVel = bulletVel
-        self.damaged_event = 0
+        # self.damaged_event = 0
+        self.explosion_frame = 0
                 
     
     def build_spaceShip(self, imageName, position):
@@ -82,8 +83,10 @@ class SpaceShip():
             FIRE_SOUND.play()  
 
     def got_hit(self, damage):
+        if not self.explosion_frame:
+            self.explosion_frame = 1
         EXPLOSION_SOUND.play()
-        pygame.event.post(pygame.event.Event(self.damaged_event))                
+        # pygame.event.post(pygame.event.Event(self.damaged_event))                
         self.health -= damage                
 
     def aim_target(self, opponent):
@@ -126,38 +129,49 @@ class SpaceShip():
         self.spaceShipBox = pygame.Rect(tuple(self.position), self.shipSize)                
         
 # Functions
-def draw_objects(list_Objects=None):        
+def draw_objects(list_Objects=None, *StartExplosion):        
     WINDOW.blit(BACKGROUND, (0, 0))
     pygame.draw.rect(WINDOW, WHITE, BORDER)
     
     if list_Objects != None:        
         draw_bullet(list_Objects[0].bullets, RED)
         draw_bullet(list_Objects[1].bullets, YELLOW)
-    
+
         WINDOW.blits((list_Objects[0].VisualUpdate, list_Objects[1].VisualUpdate))
+
+        if list_Objects[0].explosion_frame:
+            list_Objects[0].explosion_frame = draw_explosion(list_Objects[0].position, list_Objects[0].explosion_frame)            
+        if list_Objects[1].explosion_frame:
+            list_Objects[1].explosion_frame = draw_explosion(list_Objects[1].position, list_Objects[1].explosion_frame)
+
         draw_info(list_Objects)        
     pygame.display.update()
 
 def draw_info(list_InfoUpdate=None):    
-    if list_InfoUpdate != None:        
+    if list_InfoUpdate != None:
         if 0 in [list_InfoUpdate[0].health, list_InfoUpdate[1].health]:
-            if list_InfoUpdate[0].health == 0:
-                draw_explosion(list_InfoUpdate[0].position)                                       
+            if list_InfoUpdate[0].health == 0:                 
                 WINNER_INFO = WINNER_FONT.render( f"YELLOW WIN!!!", 1, WHITE)                
-            else:
-                draw_explosion(list_InfoUpdate[1].position)                
+            else:                
                 WINNER_INFO = WINNER_FONT.render( f"RED WIN!!!", 1, WHITE )                
             WINDOW.blit(WINNER_INFO, ((WIDTH - WINNER_INFO.get_width())//2, (HEIGHT - WINNER_INFO.get_height())//2))                        
 
-        else:
+        else:                        
             HEALTH_INFO_1 = HP_FONT.render( f"HEALTH: {list_InfoUpdate[0].health}", 1, WHITE )
-            HEALTH_INFO_2 = HP_FONT.render( f"HEALTH: {list_InfoUpdate[1].health}", 1, WHITE )        
+            HEALTH_INFO_2 = HP_FONT.render( f"HEALTH: {list_InfoUpdate[1].health}", 1, WHITE )                                
             WINDOW.blit(HEALTH_INFO_1, (10, 10))
-            WINDOW.blit(HEALTH_INFO_2, (WIDTH - HEALTH_INFO_2.get_width(), 10))
+            WINDOW.blit(HEALTH_INFO_2, (WIDTH - HEALTH_INFO_2.get_width(), 10))            
 
 def draw_bullet(bullets, color):
     for bullet in bullets:
         pygame.draw.rect(WINDOW, color, bullet)
+
+def draw_explosion(position, frame):    
+    if frame >= len(EXPLOSION_VISUAL):
+        return 0
+    WINDOW.blit(EXPLOSION_VISUAL[frame-1], position)
+    update_frame = frame + 1
+    return update_frame
 
 # Main loop
 def main():
@@ -168,7 +182,8 @@ def main():
     RedSpaceShip.damaged_event = pygame.USEREVENT + 1
     YellowSpaceShip = SpaceShip(YELLOW, (700, 250, 270), "spaceship_yellow.png", bullets=6)    
     YellowSpaceShip.damaged_event = pygame.USEREVENT + 2
-    VisualUpdates = (RedSpaceShip, YellowSpaceShip)            
+    VisualUpdates = (RedSpaceShip, YellowSpaceShip)
+    # last_update_explosion = [0, 4, ""]    
 
     # Run game
     while run:
@@ -184,21 +199,21 @@ def main():
                 if event.key == K_KP_0:
                     YellowSpaceShip.shooting()
             
-            if event.type == RedSpaceShip.damaged_event:
-                print("Red got hit")
-                draw_explosion(tuple(RedSpaceShip.position))
+            # if event.type == RedSpaceShip.damaged_event:
+            #     last_update_explosion = ("RED", pygame.time.get_ticks())
+            #     print("Red got hit")              
                 
             
-            if event.type == YellowSpaceShip.damaged_event:
-                print("Yello got hit")
-                draw_explosion(tuple(YellowSpaceShip.position))                
+            # if event.type == YellowSpaceShip.damaged_event:                
+            #     last_update_explosion = ("YELLOW", pygame.time.get_ticks())
+            #     print("Yello got hit")                
 
         RedSpaceShip.aim_target(YellowSpaceShip)
         YellowSpaceShip.aim_target(RedSpaceShip)
 
         keypressed = pygame.key.get_pressed()
         RedSpaceShip.control(keypressed)
-        YellowSpaceShip.control(keypressed)
+        YellowSpaceShip.control(keypressed)        
         
         draw_objects(VisualUpdates)
         InfoUpdates = [RedSpaceShip.health, YellowSpaceShip.health]
