@@ -1,5 +1,3 @@
-from cmath import nan
-from pickle import FALSE
 import pygame
 import os
 from pygame.locals import (
@@ -14,8 +12,6 @@ from pygame.locals import (
     K_d,
     K_w,
 )
-
-from test_expolsion import Explosion
 
 # Initialize
 pygame.init()
@@ -60,7 +56,8 @@ class SpaceShip():
         self.health = health
         self.position = list(position[:2])
         self.color = color
-        self.spaceShip = self.build_spaceShip(image, position)        
+        self.spaceShip = self.build_spaceShip(image, position)
+        self.spaceShipBox = self.spaceShip.get_bounding_rect()
         self.maxBullets = bullets
         self.bullets = []
         self.velocity = vel
@@ -178,9 +175,9 @@ def main():
     # Setup new game
     clock = pygame.time.Clock()
     run = True    
-    RedSpaceShip = SpaceShip(RED, (100, 250, 90), "spaceship_red.png")  # (100, 250, 90) => x = 100, y = 250, rotation angle = 90 degree
+    RedSpaceShip = SpaceShip(RED, (100, 250, 90), "spaceship_red.png", health=100)  # (100, 250, 90) => x = 100, y = 250, rotation angle = 90 degree
     RedSpaceShip.damaged_event = pygame.USEREVENT + 1
-    YellowSpaceShip = SpaceShip(YELLOW, (700, 250, 270), "spaceship_yellow.png", bullets=6)    
+    YellowSpaceShip = SpaceShip(YELLOW, (700, 250, 270), "spaceship_yellow.png", health=100)    
     YellowSpaceShip.damaged_event = pygame.USEREVENT + 2
     VisualUpdates = (RedSpaceShip, YellowSpaceShip)
     # last_update_explosion = [0, 4, ""]    
