@@ -175,9 +175,9 @@ def main():
     # Setup new game
     clock = pygame.time.Clock()
     run = True    
-    RedSpaceShip = SpaceShip(RED, (100, 250, 90), "spaceship_red.png", health=100)  # (100, 250, 90) => x = 100, y = 250, rotation angle = 90 degree
+    RedSpaceShip = SpaceShip(RED, (100, 250, 90), "spaceship_red.png", health=10)  # (100, 250, 90) => x = 100, y = 250, rotation angle = 90 degree
     RedSpaceShip.damaged_event = pygame.USEREVENT + 1
-    YellowSpaceShip = SpaceShip(YELLOW, (700, 250, 270), "spaceship_yellow.png", health=100)    
+    YellowSpaceShip = SpaceShip(YELLOW, (700, 250, 270), "spaceship_yellow.png", health=10)    
     YellowSpaceShip.damaged_event = pygame.USEREVENT + 2
     VisualUpdates = (RedSpaceShip, YellowSpaceShip)
     # last_update_explosion = [0, 4, ""]    
@@ -199,8 +199,7 @@ def main():
             # if event.type == RedSpaceShip.damaged_event:
             #     last_update_explosion = ("RED", pygame.time.get_ticks())
             #     print("Red got hit")              
-                
-            
+                                        
             # if event.type == YellowSpaceShip.damaged_event:                
             #     last_update_explosion = ("YELLOW", pygame.time.get_ticks())
             #     print("Yello got hit")                
