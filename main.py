@@ -39,12 +39,7 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                sys.exit()
-                
-            if event.type == KEYDOWN:
-                if event.key == K_ESCAPE:
-                    pygame.quit()
-                    sys.exit()                         
+                sys.exit()                                               
 
         screen.blit(StartScene.startscene_bg, (0,0))
         StartScene.show_setting_menu()

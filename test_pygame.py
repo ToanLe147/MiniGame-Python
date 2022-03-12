@@ -1,17 +1,6 @@
 import pygame
 import os
-from pygame.locals import (
-    K_UP,
-    K_DOWN,
-    K_LEFT,
-    K_RIGHT,
-    K_KP_0,
-    K_f,
-    K_a,
-    K_s,
-    K_d,
-    K_w,    
-)
+from pygame.locals import *
 
 # Initialize
 pygame.init()
@@ -26,9 +15,10 @@ YELLOW = (255, 255, 0)
 
 # Setup window
 FPS = 60
-WIDTH, HEIGHT = 900, 500
+WIDTH, HEIGHT = 1200, 700
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
-BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join("Assets","space.png")), (WIDTH, HEIGHT))
+pygame.display.set_caption("VS Mode")
+BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join("Assets","Setting_BG.jpg")), (WIDTH, HEIGHT)).convert()
 BORDER = pygame.Rect(WIDTH//2 - 5, 0, 10, HEIGHT)
 
 # Font variables
@@ -48,6 +38,7 @@ for i in range(1,6):
     img = pygame.transform.scale(img, (50,50))
     EXPLOSION_VISUAL.append(img)
 
+
 # Objects
 class SpaceShip():
     def __init__(self, name, color, position, image, health=10, bullets=3, bulletVel=10, vel=5, shipSize=(60,50)):
@@ -65,6 +56,9 @@ class SpaceShip():
         self.VisualUpdate = (self.spaceShip, self.position)  
         self.BulletVel = bulletVel        
         self.explosion_frame = 0
+
+    def reset(self):
+        self.bullets = []
                 
     
     def build_spaceShip(self, imageName, position):
@@ -147,9 +141,13 @@ def draw_info(list_InfoUpdate=None):
     if list_InfoUpdate != None:
         if 0 in [list_InfoUpdate[0].health, list_InfoUpdate[1].health]:
             if list_InfoUpdate[0].health == 0:                 
-                WINNER_INFO = WINNER_FONT.render( f"YELLOW WIN!!!", 1, WHITE)                
+                list_InfoUpdate[0].reset()                
+                list_InfoUpdate[1].reset()
+                WINNER_INFO = WINNER_FONT.render( f"{list_InfoUpdate[1].name} WIN!!!", 1, WHITE)                                
             else:                
-                WINNER_INFO = WINNER_FONT.render( f"RED WIN!!!", 1, WHITE )                
+                list_InfoUpdate[0].reset()                
+                list_InfoUpdate[1].reset()
+                WINNER_INFO = WINNER_FONT.render( f"{list_InfoUpdate[0].name} WIN!!!", 1, WHITE )                                                
             WINDOW.blit(WINNER_INFO, ((WIDTH - WINNER_INFO.get_width())//2, (HEIGHT - WINNER_INFO.get_height())//2))                        
 
         else:                        
@@ -170,13 +168,13 @@ def draw_explosion(position, frame):
     return update_frame
 
 # Main loop
-def main():
+def game():
     # Setup new game
     clock = pygame.time.Clock()
     run = True    
-    RedSpaceShip = SpaceShip("RED", RED, (100, 250, 90), "spaceship_red.png", health=20)  # (100, 250, 90) => x = 100, y = 250, rotation angle = 90 degree
+    RedSpaceShip = SpaceShip("Anh Map", RED, (100, 250, 90), "spaceship_red.png", health=20, bullets=5)  # (100, 250, 90) => x = 100, y = 250, rotation angle = 90 degree
     RedSpaceShip.damaged_event = pygame.USEREVENT + 1
-    YellowSpaceShip = SpaceShip("YELLOW", YELLOW, (700, 250, 270), "spaceship_yellow.png", health=20)    
+    YellowSpaceShip = SpaceShip("Em", YELLOW, (700, 250, 270), "spaceship_yellow.png", health=20, bullets=5)    
     YellowSpaceShip.damaged_event = pygame.USEREVENT + 2
     VisualUpdates = (RedSpaceShip, YellowSpaceShip)    
 
@@ -195,6 +193,7 @@ def main():
                     YellowSpaceShip.shooting()
                 if event.key == pygame.K_ESCAPE:
                     run = False
+                    return
                                     
         RedSpaceShip.aim_target(YellowSpaceShip)
         YellowSpaceShip.aim_target(RedSpaceShip)
@@ -209,7 +208,7 @@ def main():
             pygame.time.wait(2000)
             break        
 
-    main()
+    game()
 
 if __name__ == "__main__":
-    main()
+    game()

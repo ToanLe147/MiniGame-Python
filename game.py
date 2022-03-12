@@ -152,13 +152,13 @@ def draw_info(list_InfoUpdate=None):
     if list_InfoUpdate != None:
         if 0 in [list_InfoUpdate[0].health, list_InfoUpdate[1].health]:
             if list_InfoUpdate[0].health == 0:                 
-                WINNER_INFO = WINNER_FONT.render( f"{list_InfoUpdate[1].name} WIN!!!", 1, WHITE)
                 list_InfoUpdate[0].reset()                
-                list_InfoUpdate[1].reset()                
+                list_InfoUpdate[1].reset()
+                WINNER_INFO = WINNER_FONT.render( f"{list_InfoUpdate[1].name} WIN!!!", 1, WHITE)                                
             else:                
-                WINNER_INFO = WINNER_FONT.render( f"{list_InfoUpdate[0].name} WIN!!!", 1, WHITE )                
                 list_InfoUpdate[0].reset()                
-                list_InfoUpdate[1].reset()                
+                list_InfoUpdate[1].reset()
+                WINNER_INFO = WINNER_FONT.render( f"{list_InfoUpdate[0].name} WIN!!!", 1, WHITE )                                                
             WINDOW.blit(WINNER_INFO, ((WIDTH - WINNER_INFO.get_width())//2, (HEIGHT - WINNER_INFO.get_height())//2))                        
 
         else:                        
@@ -183,9 +183,9 @@ def game():
     # Setup new game
     clock = pygame.time.Clock()
     run = True    
-    RedSpaceShip = SpaceShip("MAP DEP TRAI", RED, (100, 250, 90), "spaceship_red.png", health=20)  # (100, 250, 90) => x = 100, y = 250, rotation angle = 90 degree
+    RedSpaceShip = SpaceShip("Anh Map", RED, (100, 250, 90), "spaceship_red.png", health=20, bullets=5)  # (100, 250, 90) => x = 100, y = 250, rotation angle = 90 degree
     RedSpaceShip.damaged_event = pygame.USEREVENT + 1
-    YellowSpaceShip = SpaceShip("DZO TUN", YELLOW, (700, 250, 270), "spaceship_yellow.png", health=20)    
+    YellowSpaceShip = SpaceShip("Em", YELLOW, (700, 250, 270), "spaceship_yellow.png", health=20, bullets=5)    
     YellowSpaceShip.damaged_event = pygame.USEREVENT + 2
     VisualUpdates = (RedSpaceShip, YellowSpaceShip)    
 
