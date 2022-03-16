@@ -33,6 +33,27 @@ class SceneBase:
     def Terminate(self):
         self.SwitchToScene(None)
 
+class VisualBar():
+    def __init__(self, pos, size, num, max_num, border_cl="#000000", remain_cl="#00FF00", lost_cl="#480113", border_size=2):
+        self.x = pos[0]
+        self.y = pos[1]
+        self.size_x = size[0]
+        self.size_y = size[1]
+        self.border_color = border_cl
+        self.border_size = border_size
+        self.remain_color = remain_cl
+        self.lost_color = lost_cl
+        self.num = num
+        self.max_num = max_num
+
+    def draw(self, screen, num):
+        self.num = num
+        ratio = self.num / self.max_num
+        remain = self.size_x - self.border_size*2
+        pygame.draw.rect(screen, self.border_color, (self.x - self.border_size, self.y - self.border_size, self.size_x, self.size_y))
+        pygame.draw.rect(screen, self.lost_color, (self.x, self.y, self.size_x - self.border_size*2, self.size_y - self.border_size*2))
+        pygame.draw.rect(screen, self.remain_color, (self.x, self.y, remain*ratio, self.size_y - self.border_size*2))
+
 class Button:
     def __init__(self, text, btn_color="#ced7e0", btn_highlight="#9ccddc", btn_shadow="#054569", btn_textSize=30, btn_textColor="#062c43", cb=None):
         #Core attributes 
@@ -49,8 +70,7 @@ class Button:
 
     def draw(self, screen, width, height, pos, elevation):
         # Okay
-        self.elevation = elevation
-        self.dynamic_elevation = elevation
+        self.elevation = elevation        
         self.original_y_pos = pos[1]                		                
 
         # top rectangle 
@@ -61,34 +81,33 @@ class Button:
         self.bottom_rect = pygame.Rect(pos, (width,height))		        
 
         # elevation logic 
-        self.top_rect.y = self.original_y_pos - self.dynamic_elevation
-        self.text_rect.center = self.top_rect.center 
+        self.top_rect.y = self.original_y_pos - self.elevation         
 
-        self.bottom_rect.midtop = self.top_rect.midtop
-        self.bottom_rect.height = self.top_rect.height + self.dynamic_elevation
+        self.bottom_rect.midtop = self.top_rect.midtop        
+        self.bottom_rect.y = self.original_y_pos
+        self.check_click(screen)                       
 
-        pygame.draw.rect(screen,self.bottom_color, self.bottom_rect,border_radius = 12)
-        pygame.draw.rect(screen,self.top_color, self.top_rect,border_radius = 12)
-        screen.blit(self.text_surf, self.text_rect)
-        self.check_click()               
-
-    def check_click(self):
+    def check_click(self, screen):
         mouse_pos = pygame.mouse.get_pos()
         if self.top_rect.collidepoint(mouse_pos):
             self.top_color = self.btn_attributes[1]			
 
-            if pygame.mouse.get_pressed()[0]:
-                self.dynamic_elevation = 0
+            if pygame.mouse.get_pressed()[0]:                
+                self.top_rect.y = self.original_y_pos
                 self.pressed = True                
-            else:
-                self.dynamic_elevation = self.elevation
+            else:            
+                self.top_rect.y = self.original_y_pos - self.elevation
                 if self.pressed == True:					                                                          
                     if self.callback != None:
                         self.callback()                    
                     self.pressed = False                    
-        else:
-            self.dynamic_elevation = self.elevation
+        else:            
+            self.top_rect.y = self.original_y_pos - self.elevation
             self.top_color = self.btn_attributes[0]
+        self.text_rect.center = self.top_rect.center
+        pygame.draw.rect(screen,self.bottom_color, self.bottom_rect,border_radius = 12)
+        pygame.draw.rect(screen,self.top_color, self.top_rect,border_radius = 12)
+        screen.blit(self.text_surf, self.text_rect)
 
 class Settings(SceneBase):
     def __init__(self):
