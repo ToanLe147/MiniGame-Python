@@ -1,225 +1,228 @@
-import pygame
-import os
-from pygame.locals import (
-    K_UP,
-    K_DOWN,
-    K_LEFT,
-    K_RIGHT,
-    K_KP_0,
-    K_f,
-    K_a,
-    K_s,
-    K_d,
-    K_w,    
-)
+import pygame, os
+from pygame.locals import *
+from settings import Button, SceneBase, WIDTH, HEIGHT
+from debug import debug
 
-# Initialize
-pygame.init()
 pygame.font.init()
 pygame.mixer.init()
-
-# Color variables
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-YELLOW = (255, 255, 0)
-
-# Setup window
-FPS = 60
-WIDTH, HEIGHT = 1200, 700
-WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("VS Mode")
-# BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join("Assets","space.png")), (WIDTH, HEIGHT))
-BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join("Assets","Setting_BG.jpg")), (WIDTH, HEIGHT)).convert()
-BORDER = pygame.Rect(WIDTH//2 - 5, 0, 10, HEIGHT)
-
-# Font variables
-HP_FONT = pygame.font.SysFont("comicsans", 40)
-INFO_FONT = pygame.font.SysFont("comicsans", 80)
-WARN_FONT = pygame.font.SysFont("comicsans", 100)
-WINNER_FONT = pygame.font.SysFont("comicsans", 100)
 
 # Sound effects
 FIRE_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","Gun+Silencer.mp3"))
 EXPLOSION_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","Grenade+1.mp3"))
 
-# Explosion effects
-EXPLOSION_VISUAL = []
-for i in range(1,6):
-    img = pygame.image.load(os.path.join("Assets/Explosion",f"exp{i}.png"))
-    img = pygame.transform.scale(img, (50,50))
-    EXPLOSION_VISUAL.append(img)
+# Color variables
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GREY = "#808080"
+DARKBLUE = "#054569"
+OATYELLOW = "#f1e3bc"
 
-# Objects
-class SpaceShip():
-    def __init__(self, name, color, position, image, health=10, bullets=3, bulletVel=10, vel=5, shipSize=(60,50)):
-        self.name = name
-        self.shipSize = shipSize   
-        self.headDirection = (True if 0 < position[2] < 180 else False)                
-        self.health = health
-        self.position = list(position[:2])
-        self.color = color
-        self.spaceShip = self.build_spaceShip(image, position)
-        self.spaceShipBox = self.spaceShip.get_bounding_rect()
-        self.maxBullets = bullets
-        self.bullets = []
-        self.velocity = vel
-        self.VisualUpdate = (self.spaceShip, self.position)  
-        self.BulletVel = bulletVel        
-        self.explosion_frame = 0
+class GameMulti(SceneBase):
+    def __init__(self):
+        SceneBase.__init__(self)        
+        self.game_bg = pygame.transform.scale(pygame.image.load(os.path.join("Assets","space.png")), (WIDTH, HEIGHT))
+        self.game_border = pygame.Rect(WIDTH//2 - 5, 0, 10, HEIGHT)
 
-    def reset(self):
-        self.bullets = []
-                
+        self.players = pygame.sprite.Group()
+        self.effects = pygame.sprite.Group()
+        self.infos = pygame.sprite.Group()
+
+        self.initilaization = False         
+
+    def InitPlayer(self):
+        self.player_1_init = Initialize("LEFT")
+        # self.player_2_init = Initialize("RIGHT")
+        self.SwitchToScene(self.player_1_init)
+        self.initilaization = True
+
+    def ProcessInput(self, events, pressed_keys):
+        for event in events:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:                
+                self.SwitchToScene(self.list_of_scenes["settings"])
     
-    def build_spaceShip(self, imageName, position):
-        SPACESHIP_IMAGE = pygame.transform.rotate(pygame.transform.scale(pygame.image.load(os.path.join("Assets", imageName)), self.shipSize), position[2])                
-        return SPACESHIP_IMAGE                   
+    def Update(self):
+        if not self.initilaization:
+            self.InitPlayer()
+        
+    def Render(self, screen):        
+        screen.blit(self.game_bg, (0,0))
+        pygame.draw.rect(screen, WHITE, self.game_border)
+        self.players.update()
+        self.effects.update()
+        self.infos.update()              
+
+class Initialize(SceneBase):
+    def __init__(self, side):
+        SceneBase.__init__(self)
+        self.side = side  # LEFT or RIGHT
+        self.scene_logo = pygame.transform.scale(pygame.image.load(os.path.join("Assets", "SpaceFactory-square.png")), (300,148))
+        self.scene_logo_pos = (50, 50)
+        self.shipList_logo = pygame.transform.scale(pygame.image.load(os.path.join("Assets", "spaceshipList-blue.png")), (200,52))
+        self.shipList_logo_pos = (500, 50)        
+        self.nameSection_logo = pygame.transform.scale(pygame.image.load(os.path.join("Assets", "name-section.png")), (150,67.5))
+        self.nameSection_logo_pos = (125, 240)        
+        
+        # ============ EDIT NAME SECTION ==================
+        self.edit_name_trigger = False
+        self.name_confirm = False        
+        self.name_rect_pos = (100, 300)                
+        self.name_rect_size = (200, 40)               
+        self.name_rect = pygame.Rect(self.name_rect_pos, self.name_rect_size)
+        self.name = ""
+        self.name_font = pygame.font.Font(None, 30)
+        self.name_color = DARKBLUE
+        self.name_surface = self.name_font.render(self.name, True, self.name_color)
+        self.name_text_rect = self.name_surface.get_rect(center=self.name_rect.center) 
+
+        self.name_btn = {}
+        self.name_btn_pos = (100, 400)
+        self.name_btn_size = (200, 40)
+        self.name_btn_offset = 100
+        self.name_btn_elevation = 5
+        self.name_btn["Edit"] = Button("Edit Name", cb=self.EditName)
+        self.name_btn["Confirm"] = Button("Confirm Name", cb=self.ConfirmName)
+        self.name_btn["Aceept"] = Button("Accept Spaceship")
+
+        # ============ SELECT SPACESHIP SECTION ===========
+        self.ship_btn = {}
+        self.ship_btn_pos = (500, 200)
+        self.ship_btn_size = (200, 40)
+        self.ship_btn_offset = 100
+        self.ship_btn_elevation = 5
+        self.ship_btn["Alien_Spaceship"] = Button("Alien Spaceship")
+        self.ship_btn["Fighter_Jet"] = Button("Fighter Jet")
+        self.ship_btn["Space_Shuttle"] = Button("Space Shuttle")
+        self.ship_btn["Star_War_Ship"] = Button("Star War Ship")
+        self.ship_btn["UFO"] = Button("UFO")                
+    
+    def ProcessInput(self, events, pressed_keys):        
+        for event in events:                                      
+            if event.type == pygame.KEYDOWN:
+                self.InputName(event)
+                if event.key == K_ESCAPE:
+                    print("Press ESC")
+                    self.Terminate()    
+    
+    def Update(self):
+        pass
+    
+    def Render(self, screen):
+        screen.fill(OATYELLOW)
+        screen.blit(self.scene_logo, self.scene_logo_pos)
+        screen.blit(self.shipList_logo, self.shipList_logo_pos)
+        screen.blit(self.nameSection_logo, self.nameSection_logo_pos)
+        pygame.draw.rect(screen, WHITE if self.edit_name_trigger else GREY, self.name_rect, border_radius=5)
+        self.name_surface = self.name_font.render(self.name, True, self.name_color)
+        self.name_text_rect = self.name_surface.get_rect(center=self.name_rect.center)       
+        screen.blit(self.name_surface, self.name_text_rect)
+        self.DrawButton(screen, self.name_btn, self.name_btn_pos, self.name_btn_size, self.name_btn_elevation, self.name_btn_offset)
+        self.DrawButton(screen, self.ship_btn, self.ship_btn_pos, self.ship_btn_size, self.ship_btn_elevation, self.ship_btn_offset)
+        debug(f"{pygame.mouse.get_pos()}", pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
+        
+    def InputName(self, event):        
+        if self.edit_name_trigger and not self.name_confirm:            
+            if event.key == K_BACKSPACE:
+                self.name = self.name[:-1]
+            elif event.key == K_RETURN:                
+                self.name_confirm = True
+                self.edit_name_trigger = False
+                print("Press Enter")
+                print(f"{self.name}")
+            else:
+                self.name += event.unicode
+        if self.name.__len__() >= 16:
+            self.edit_name_trigger = False
+            print("Name too long now")
+
+    def EditName(self):
+        self.edit_name_trigger = True
+        self.name_confirm = False
+        print("Can edit name now")
+    
+    def ConfirmName(self):
+        self.name_confirm = True
+        self.edit_name_trigger = False
+        print("Click Confirm")
+        print(f"{self.name}")
+    
+    # def CheckEditName(self):
+    #     mouse_pos = pygame.mouse.get_pos()
+    #     if self.name_rect.collidepoint(mouse_pos):            
+    #         if pygame.mouse.get_pressed()[0]:
+    #             self.edit_name_trigger = True
+    #             print("Can edit name now")
+    
+    def DrawButton(self, screen, button_list, start_pos, button_size, elevation, offset):
+        index = 0
+        x = start_pos[0]
+        for button in button_list:
+            new_button_pos = (x, start_pos[1] + index * offset)
+            button_list[button].draw(screen, button_size[0], button_size[1], new_button_pos, elevation)
+            index += 1
+
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        # Explosion
+        self.explosion_index = 0
+        self.explosion_list = [ pygame.image.load(os.path.join("Assets/Explosion",f"exp{i}.png")) for i in range(1,6) ]
+        self.explosion = self.explosion_list[self.explosion_index]        
+
+    def update(self):
+        pass
+
+    def destroy(self):
+        pass
+
+class SpaceShip(pygame.sprite.Sprite):
+    def __init__(self, side):
+        super().__init__()
+        self.side = side  # LEFT or RIGHT
+        
+        # Basic attributes
+        self.org_HP = 100
+        self.bullets = []
+        self.org_maxBullets = 10
+        self.org_bulletDamage = 15
+        self.org_bulletVel = 10        
+        self.org_shipVel = 5
+    
+    def update(self):
+        pass
+    
+    def player_input(self):
+        pass
 
     def shooting(self):
-        BULLET = pygame.Rect(
-            self.position[0] + self.shipSize[0]//2, self.position[1] + self.shipSize[1]//2, 10, 5
-        )        
-        if len(self.bullets) < self.maxBullets:
-            self.bullets.append(BULLET) 
-            FIRE_SOUND.play()  
-
-    def got_hit(self, damage):
-        if not self.explosion_frame:
-            self.explosion_frame = 1
-        EXPLOSION_SOUND.play()                      
-        self.health -= damage                
-
-    def aim_target(self, opponent):
-        for bullet in self.bullets:
-            if self.headDirection:
-                bullet.x += self.BulletVel
-                if opponent.spaceShipBox.colliderect(bullet):
-                    opponent.got_hit(1)
-                    self.bullets.remove(bullet)
-                elif bullet.x > WIDTH:            
-                    self.bullets.remove(bullet)
-            else:
-                bullet.x -= self.BulletVel
-                if opponent.spaceShipBox.colliderect(bullet):
-                    opponent.got_hit(1)
-                    self.bullets.remove(bullet)
-                elif bullet.x < 0:            
-                    self.bullets.remove(bullet)                
-
-    def control(self, key_pressed):
-        if self.headDirection:             
-            if key_pressed[K_a] and self.position[0] - self.velocity > 10:
-                self.position[0] -= self.velocity                
-            if key_pressed[K_d] and self.position[0] + self.velocity < WIDTH//2 - self.shipSize[0] + 5:
-                self.position[0] += self.velocity            
-            if key_pressed[K_s] and self.position[1] + self.velocity < HEIGHT - self.shipSize[1] - 10:
-                self.position[1] += self.velocity
-            if key_pressed[K_w] and self.position[1] - self.velocity > 5:                
-                self.position[1] -= self.velocity            
-        else:        
-            if key_pressed[K_LEFT] and self.position[0] - self.velocity > WIDTH//2 + 10:
-                self.position[0] -= self.velocity
-            if key_pressed[K_RIGHT] and self.position[0] + self.velocity < WIDTH - self.shipSize[0] + 5:
-                self.position[0] += self.velocity            
-            if key_pressed[K_DOWN] and self.position[1] + self.velocity < HEIGHT - self.shipSize[1] - 10:
-                self.position[1] += self.velocity
-            if key_pressed[K_UP] and self.position[1] - self.velocity > 5:
-                self.position[1] -= self.velocity            
-            
-        self.spaceShipBox = pygame.Rect(tuple(self.position), self.shipSize)                
-        
-# Functions
-def draw_objects(list_Objects=None, *StartExplosion):        
-    WINDOW.blit(BACKGROUND, (0, 0))
-    pygame.draw.rect(WINDOW, WHITE, BORDER)
+        pass
     
-    if list_Objects != None:        
-        draw_bullet(list_Objects[0].bullets, RED)
-        draw_bullet(list_Objects[1].bullets, YELLOW)
+    def got_hit(self, damage):
+        pass
 
-        WINDOW.blits((list_Objects[0].VisualUpdate, list_Objects[1].VisualUpdate))
-
-        if list_Objects[0].explosion_frame:
-            list_Objects[0].explosion_frame = draw_explosion(list_Objects[0].position, list_Objects[0].explosion_frame)            
-        if list_Objects[1].explosion_frame:
-            list_Objects[1].explosion_frame = draw_explosion(list_Objects[1].position, list_Objects[1].explosion_frame)
-
-        draw_info(list_Objects)        
-    pygame.display.update()
-
-def draw_info(list_InfoUpdate=None):    
-    if list_InfoUpdate != None:
-        if 0 in [list_InfoUpdate[0].health, list_InfoUpdate[1].health]:
-            if list_InfoUpdate[0].health == 0:                 
-                list_InfoUpdate[0].reset()                
-                list_InfoUpdate[1].reset()
-                WINNER_INFO = WINNER_FONT.render( f"{list_InfoUpdate[1].name} WIN!!!", 1, WHITE)                                
-            else:                
-                list_InfoUpdate[0].reset()                
-                list_InfoUpdate[1].reset()
-                WINNER_INFO = WINNER_FONT.render( f"{list_InfoUpdate[0].name} WIN!!!", 1, WHITE )                                                
-            WINDOW.blit(WINNER_INFO, ((WIDTH - WINNER_INFO.get_width())//2, (HEIGHT - WINNER_INFO.get_height())//2))                        
-
-        else:                        
-            HEALTH_INFO_1 = HP_FONT.render( f"{list_InfoUpdate[0].name}: {list_InfoUpdate[0].health}", 1, WHITE )
-            HEALTH_INFO_2 = HP_FONT.render( f"{list_InfoUpdate[1].name}: {list_InfoUpdate[1].health}", 1, WHITE )                                
-            WINDOW.blit(HEALTH_INFO_1, (10, 10))
-            WINDOW.blit(HEALTH_INFO_2, (WIDTH - HEALTH_INFO_2.get_width(), 10))            
-
-def draw_bullet(bullets, color):
-    for bullet in bullets:
-        pygame.draw.rect(WINDOW, color, bullet)
-
-def draw_explosion(position, frame):    
-    if frame >= len(EXPLOSION_VISUAL):
-        return 0
-    WINDOW.blit(EXPLOSION_VISUAL[frame-1], position)
-    update_frame = frame + 1
-    return update_frame
-
-# Main loop
-def game():
-    # Setup new game
-    clock = pygame.time.Clock()
-    run = True    
-    RedSpaceShip = SpaceShip("Anh Map", RED, (100, 250, 90), "spaceship_red.png", health=20, bullets=5)  # (100, 250, 90) => x = 100, y = 250, rotation angle = 90 degree
-    RedSpaceShip.damaged_event = pygame.USEREVENT + 1
-    YellowSpaceShip = SpaceShip("Em", YELLOW, (700, 250, 270), "spaceship_yellow.png", health=20, bullets=5)    
-    YellowSpaceShip.damaged_event = pygame.USEREVENT + 2
-    VisualUpdates = (RedSpaceShip, YellowSpaceShip)    
-
-    # Run game
-    while run:
-        clock.tick(FPS)                                   
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-                pygame.quit()
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == K_f:
-                    RedSpaceShip.shooting()
-                if event.key == K_KP_0:
-                    YellowSpaceShip.shooting()
-                if event.key == pygame.K_ESCAPE:
-                    run = False
-                    return
-                                    
-        RedSpaceShip.aim_target(YellowSpaceShip)
-        YellowSpaceShip.aim_target(RedSpaceShip)
-
-        keypressed = pygame.key.get_pressed()
-        RedSpaceShip.control(keypressed)
-        YellowSpaceShip.control(keypressed)        
-        
-        draw_objects(VisualUpdates)
-        InfoUpdates = [RedSpaceShip.health, YellowSpaceShip.health]
-        if 0 in InfoUpdates:
-            pygame.time.wait(2000)
-            break        
-
-    game()
-
-if __name__ == "__main__":
-    game()
+    def BasicPrototype(self):
+        # Special attributes
+        self.name = "Unknown"
+        self.type = "Basic Prototype"
+        self.shipSize = (60,60)        
+        self.image = pygame.transform.scale(pygame.image.load(os.path.join("Assets/Spaceships", "basicprototype.png")), self.shipSize)        
+        # Basic attributes
+        self.HP = self.org_HP        
+        self.maxBullets = self.org_maxBullets
+        self.bulletDamage = self.org_bulletDamage
+        self.bulletVel = self.org_bulletVel      
+        self.shipVel = self.org_shipVel
+    
+    def AlienSpaceShip(self, name, position):        
+        # Special attributes
+        self.name = name
+        self.type = "Alien Spaceship"
+        self.shipSize = ()        
+        self.image = pygame.transform.scale(pygame.image.load(os.path.join("Assets/Spaceships", "alien-spaceship.png")), self.shipSize)
+        self.position = position
+        # Basic attributes
+        self.HP = self.org_HP        
+        self.maxBullets = self.org_maxBullets - 7
+        self.bulletDamage = self.org_bulletDamage - 3
+        self.bulletVel = self.org_bulletVel - 7        
+        self.shipVel = self.org_shipVel - 4.5
+    

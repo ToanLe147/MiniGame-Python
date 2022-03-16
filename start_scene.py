@@ -1,48 +1,61 @@
-import sys, os
-import pygame
-from button import Button
-from game import game
+import pygame, os
+from settings import Button, WIDTH, HEIGHT, SceneBase
+class StartScene(SceneBase):
+    def __init__(self):
+        SceneBase.__init__(self)            
+        self.setting_bg = pygame.transform.scale(pygame.image.load(os.path.join("Assets","start_bg.jpg")), (WIDTH, HEIGHT))
+        self.logo = [ pygame.transform.scale(pygame.image.load(os.path.join("Assets/Game-logo",f"frame_{i}_delay-0.15s.png")), (600,100)) for i in range(6) ]
+        self.logo_pos = (100, 300)
+        self.logo_frame = 0
+        self.clock = None
 
-SCREEN_WIDTH = 1200
-SCREEN_HEIGHT = 700
-FPS = 60
-
-class StartScene():
-    def __init__(self, screen) -> None:
-        self.startscene_bg = pygame.transform.scale(pygame.image.load(os.path.join("Assets","start_bg.jpg")), (screen.get_width(), screen.get_height())).convert()                
-        
-        self.start_pos = (SCREEN_WIDTH//6*5, SCREEN_HEIGHT)        
+        self.start_pos = (WIDTH//6*5, HEIGHT)        
         self.button_width = 200
         self.button_height = 40
-        self.button_elevation = 5
+        self.button_elevation = 5        
         
         self.button_list = {}
-        # self.button_list['Campaign'] = Button(screen, 'Campaign', self.campagin_mode)
-        self.button_list['Multiplayers'] = Button(screen, 'Multiplayers', self.multi_player_mode)
-        # self.button_list['Settings'] = Button(screen, 'Settings', self.settings_scene)
-        self.button_list['Exit'] = Button(screen, 'Exit', self.exit)
+        self.button_list['Campaign'] = Button('Campaign')
+        self.button_list['1 vs 1'] = Button('1 vs 1', cb=self.GameMulti)
+        self.button_list['Settings'] = Button('Settings', cb=self.Settings)
+        self.button_list['Exit'] = Button('Exit', cb=self.Exit)
 
         self.offset = (self.start_pos[1] - (len(self.button_list) * self.button_height)) // (len(self.button_list) + 1)
-                       
+    
+    def ProcessInput(self, events, pressed_keys):
+        for event in events:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                # Move to the next scene when the user pressed Enter
+                print("Pressed ESC")
+    
+    def Update(self):        
+        pass
 
-    def show_setting_menu(self):        
+    def draw_logo(self, screen):
+        if self.clock:
+            self.clock.tick(20)                    
+        if self.logo_frame < self.logo.__len__():
+            screen.blit(self.logo[self.logo_frame], self.logo_pos)
+            self.logo_frame += 1
+        else:
+            self.logo_frame = 0
+            screen.blit(self.logo[self.logo_frame], self.logo_pos)        
+    
+    def Render(self, screen):        
+        screen.blit(self.setting_bg, (0,0))
+        self.draw_logo(screen)
         index = 1
         x = self.start_pos[0] - (self.button_width // 2)
         for button in self.button_list:            
             button_pos = (x, index * self.offset)
-            self.button_list[button].draw(self.button_width, self.button_height, button_pos, self.button_elevation)
-            index += 1        
+            self.button_list[button].draw(screen, self.button_width, self.button_height, button_pos, self.button_elevation)
+            index += 1  
     
-    # def campagin_mode(self):
-        # print("Campaign mode")
+    def Settings(self):
+        self.SwitchToScene(self.list_of_scenes["settings"])        
     
-    def multi_player_mode(self):        
-        print("Multiplayer")
-        game()    
-
-    # def settings_scene(self):                
-        # print("Settings")
+    def Exit(self):
+        self.Terminate()
     
-    def exit(self):
-        pygame.quit()
-        sys.exit()
+    def GameMulti(self):
+        self.SwitchToScene(self.list_of_scenes["game_multi"])

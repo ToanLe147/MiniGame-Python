@@ -1,55 +1,60 @@
-import pygame, sys
-import chapters
-from start_scene import *
-from debug import debug
+import pygame
 from pygame.locals import *
+from settings import *
+from start_scene import StartScene
+from game import *
 
-# Pygame setting up
 pygame.init()
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Bum Chiu Chiu")
 clock = pygame.time.Clock()
 
-LOGO = []
-LOGO_SPEED = 5
-LOGO_POS = (300, 300)
-for i in range(6):
-    img = pygame.image.load(os.path.join("Assets/Game-logo",f"frame_{i}_delay-0.15s.png")).convert()
-    img = pygame.transform.scale(img, (600,100))
-    LOGO.append(img)
-def draw_logo(logo_frame):
-    clock.tick(20)
-    if logo_frame < LOGO.__len__():
-        screen.blit(LOGO[logo_frame], LOGO_POS)
-        logo_frame += 1
-    else:
-        logo_frame = 0
-        screen.blit(LOGO[logo_frame], LOGO_POS)
-    return logo_frame
+START_SCENE = StartScene()
+START_SCENE.clock = clock
+SETTINGS = Settings()
+GAME_MULTI = GameMulti()
 
-# Parts
-StartScene = StartScene(screen)
+SCENES = {
+    "start_scene": START_SCENE,
+    "settings": SETTINGS,
+    "game_multi": GAME_MULTI,
+}
 
-# Game loop
-def main():
-    print("Game is running")
-    logo_frame = 0
+START_SCENE.list_of_scenes = SCENES
+SETTINGS.list_of_scenes = SCENES
+GAME_MULTI.list_of_scenes = SCENES
 
-    while True:
+def main(starting_scene):        
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("BUM BUM CHIU")        
+    active_scene = starting_scene
+
+    while active_scene != None:
+        pressed_keys = pygame.key.get_pressed()
+        
+        # Event filtering
+        filtered_events = []
         for event in pygame.event.get():
+            quit_attempt = False
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()                                               
-
-        screen.blit(StartScene.startscene_bg, (0,0))
-        StartScene.show_setting_menu()
-        logo_frame = draw_logo(logo_frame)
-
-        # debug(f"{pygame.mouse.get_pos()}", pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])         
-
-        pygame.display.update()
+                quit_attempt = True
+            elif event.type == pygame.KEYDOWN:
+                alt_pressed = pressed_keys[pygame.K_LALT] or \
+                              pressed_keys[pygame.K_RALT]                
+                if event.key == pygame.K_F4 and alt_pressed:
+                    quit_attempt = True
+            
+            if quit_attempt:
+                active_scene.Terminate()
+            else:
+                filtered_events.append(event)
+        
+        active_scene.ProcessInput(filtered_events, pressed_keys)
+        active_scene.Update()
+        active_scene.Render(screen)
+        
+        active_scene = active_scene.next
+        
+        pygame.display.flip()
         clock.tick(FPS)
 
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    main(GAME_MULTI)
