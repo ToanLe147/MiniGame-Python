@@ -89,8 +89,8 @@ class Initialize(SceneBase):
         self.ship_btn_size = (200, 40)
         self.ship_btn_offset = 100
         self.ship_btn_elevation = 5
-        self.ship_btn["Alien_Spaceship"] = Button("Alien Spaceship")
-        self.ship_btn["Fighter_Jet"] = Button("Fighter Jet")
+        self.ship_btn["Alien_Spaceship"] = Button("Alien Spaceship", cb=self.SelectAlienShip)
+        self.ship_btn["Fighter_Jet"] = Button("Fighter Jet", cb=self.SelectFighterJet)
         self.ship_btn["Space_Shuttle"] = Button("Space Shuttle")
         self.ship_btn["Star_War_Ship"] = Button("Star War Ship")
         self.ship_btn["UFO"] = Button("UFO")                
@@ -100,11 +100,12 @@ class Initialize(SceneBase):
         self.preview_rect_size = (310, 310)        
         self.preview_rect = pygame.Rect(self.preview_rect_pos, self.preview_rect_size)
         self.preview_spaceship = SpaceShip()
-        self.preview_img = self.GetPreview()
-        self.preview_img_rect = self.preview_img.get_rect(center=self.preview_rect.center)        
+        self.preview_img = pygame.transform.scale(pygame.image.load(self.preview_spaceship.spaceship_image_path), (self.preview_rect_size[0]-10,self.preview_rect_size[1]-10))                
 
-        self.previewBar_pos = (850, 450)
-        self.previewBar_size = (104, 24)        
+        self.previewBar_pos = (800, 450)
+        self.previewBar_size = (254, 24)
+        self.previewBar_title_pos = (750, 445)        
+        self.previewBar_title_size = (30,30)        
     
     def ProcessInput(self, events, pressed_keys):        
         for event in events:                                      
@@ -124,6 +125,7 @@ class Initialize(SceneBase):
         screen.blit(self.nameSection_logo, self.nameSection_logo_pos)
         pygame.draw.rect(screen, WHITE if self.edit_name_trigger else GREY, self.name_rect, border_radius=5)
         pygame.draw.rect(screen, DARKBLUE, self.preview_rect, border_radius=5)
+        self.preview_img_rect = self.preview_img.get_rect(center=self.preview_rect.center)
         screen.blit(self.preview_img, self.preview_img_rect)
         self.name_surface = self.name_font.render(self.name, True, self.name_color)
         self.name_text_rect = self.name_surface.get_rect(center=self.name_rect.center)       
@@ -163,17 +165,27 @@ class Initialize(SceneBase):
         print(f"{self.name}")
     
     ### ============ SELECT SPACESHIP SECTION ==================
-    # def CheckEditName(self):
-    #     mouse_pos = pygame.mouse.get_pos()
-    #     if self.name_rect.collidepoint(mouse_pos):            
-    #         if pygame.mouse.get_pressed()[0]:
-    #             self.edit_name_trigger = True
-    #             print("Can edit name now")
+    def SelectAlienShip(self):
+        self.preview_spaceship = SpaceShip("alien")
+        self.GetPreview()
+    
+    def SelectFighterJet(self):
+        self.preview_spaceship = SpaceShip("basic")
+        self.GetPreview()
 
     ### ============ INFORMATION SECTION =================
-    def GetPreview(self):
-        img = pygame.transform.scale(pygame.image.load(self.preview_spaceship.spaceship_image_path), (self.preview_rect_size[0]-10,self.preview_rect_size[1]-10))
-        return img
+    def GetPreview(self):        
+        img = pygame.image.load(self.preview_spaceship.spaceship_image_path)
+        size = (self.preview_rect_size[0]-10,self.preview_rect_size[1]-10)
+        if img.get_width() > img.get_height():
+            ratio = img.get_height() / img.get_width()
+            size = (self.preview_rect_size[0]-10,self.preview_rect_size[1]*ratio-10)
+        elif img.get_width() < img.get_height():
+            ratio = img.get_width() / img.get_height()
+            size = (self.preview_rect_size[0]*ratio-10,self.preview_rect_size[1]-10)            
+        self.preview_img = pygame.transform.scale(img, size)
+
+        
 
     ### ============ UTILITY =================
     def DrawButton(self, screen, button_list, start_pos, button_size, elevation, offset):
@@ -185,9 +197,29 @@ class Initialize(SceneBase):
             index += 1
     
     def DrawPreviewInfo(self, screen):
-        offset = 30
-        self.preview_HP = VisualBar(self.previewBar_pos, self.previewBar_size, self.preview_spaceship.HP, self.preview_spaceship.org_HP)                   
-        self.preview_HP.draw(screen, self.preview_spaceship.HP)
+        offset = 45
+        # Preview Titles
+        HP_icon = pygame.transform.scale(pygame.image.load(os.path.join("Assets/Icons", "hp.png")), self.previewBar_title_size)
+        screen.blit(HP_icon, self.previewBar_title_pos)
+        bulVel_icon = pygame.transform.scale(pygame.image.load(os.path.join("Assets/Icons", "bulVel.png")), self.previewBar_title_size)
+        screen.blit(bulVel_icon, (self.previewBar_title_pos[0], self.previewBar_title_pos[1] + offset*1))
+        bulDam_icon = pygame.transform.scale(pygame.image.load(os.path.join("Assets/Icons", "bulDam.png")), self.previewBar_title_size)
+        screen.blit(bulDam_icon, (self.previewBar_title_pos[0], self.previewBar_title_pos[1] + offset*2))
+        bulMax_icon = pygame.transform.scale(pygame.image.load(os.path.join("Assets/Icons", "bulMax.png")), self.previewBar_title_size)
+        screen.blit(bulMax_icon, (self.previewBar_title_pos[0], self.previewBar_title_pos[1] + offset*3))
+        shipVel_icon = pygame.transform.scale(pygame.image.load(os.path.join("Assets/Icons", "shipVel.png")), self.previewBar_title_size)
+        screen.blit(shipVel_icon, (self.previewBar_title_pos[0], self.previewBar_title_pos[1] + offset*4))
+        # Preview Bars
+        preview_HP = VisualBar((self.previewBar_pos[0], self.previewBar_pos[1] + offset*0), self.previewBar_size, self.preview_spaceship.HP, self.preview_spaceship.org_HP)
+        preview_HP.draw(screen, self.preview_spaceship.HP)
+        preview_shipVel = VisualBar((self.previewBar_pos[0], self.previewBar_pos[1] + offset*1), self.previewBar_size, self.preview_spaceship.shipVel, self.preview_spaceship.org_shipVel)                   
+        preview_shipVel.draw(screen, self.preview_spaceship.shipVel)
+        preview_maxBullets = VisualBar((self.previewBar_pos[0], self.previewBar_pos[1] + offset*2), self.previewBar_size, self.preview_spaceship.maxBullets, self.preview_spaceship.org_maxBullets)                   
+        preview_maxBullets.draw(screen, self.preview_spaceship.maxBullets)
+        preview_bulletDamage = VisualBar((self.previewBar_pos[0], self.previewBar_pos[1] + offset*3), self.previewBar_size, self.preview_spaceship.bulletDamage, self.preview_spaceship.org_bulletDamage)                   
+        preview_bulletDamage.draw(screen, self.preview_spaceship.bulletDamage)
+        preview_bulletVel = VisualBar((self.previewBar_pos[0], self.previewBar_pos[1] + offset*4), self.previewBar_size, self.preview_spaceship.bulletVel, self.preview_spaceship.org_bulletVel)                   
+        preview_bulletVel.draw(screen, self.preview_spaceship.bulletVel)        
 
 class Explosion(pygame.sprite.Sprite):
     def __init__(self):
@@ -241,11 +273,11 @@ class SpaceShip(pygame.sprite.Sprite):
         self.spaceship_image_path = os.path.join("Assets/Spaceships", "basicprototype.png")
         self.image = pygame.transform.scale(pygame.image.load(self.spaceship_image_path), self.shipSize)        
         # Basic attributes
-        self.HP = self.org_HP // 2       
-        self.maxBullets = self.org_maxBullets // 2
-        self.bulletDamage = self.org_bulletDamage // 2
-        self.bulletVel = self.org_bulletVel // 2     
-        self.shipVel = self.org_shipVel // 2
+        self.HP = self.org_HP / 2       
+        self.maxBullets = self.org_maxBullets / 2
+        self.bulletDamage = self.org_bulletDamage / 2
+        self.bulletVel = self.org_bulletVel / 2     
+        self.shipVel = self.org_shipVel / 2
     
     def AlienSpaceShip(self):        
         # Special attributes

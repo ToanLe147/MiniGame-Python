@@ -45,8 +45,9 @@ EXPLOSION_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","Grenade+1.mp3
 
 # Explosion effects
 EXPLOSION_VISUAL = []
-for i in range(1,6):
-    img = pygame.image.load(os.path.join("Assets/Explosion",f"exp{i}.png"))
+max_exp = 6
+for i in range(1,max_exp):
+    img = pygame.image.load(os.path.join("Assets/Explosion/exp8",f"exp{i}.png"))
     img = pygame.transform.scale(img, (50,50))
     EXPLOSION_VISUAL.append(img)
 
