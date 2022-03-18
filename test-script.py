@@ -71,8 +71,7 @@ class SpaceShip():
 
     def reset(self):
         self.bullets = []
-                
-    
+                    
     def build_spaceShip(self, imageName, position):
         SPACESHIP_IMAGE = pygame.transform.rotate(pygame.transform.scale(pygame.image.load(os.path.join("Assets", imageName)), self.shipSize), position[2])                
         return SPACESHIP_IMAGE                   

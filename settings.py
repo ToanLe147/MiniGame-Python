@@ -1,13 +1,29 @@
 import pygame, os
 
+pygame.init()
+pygame.font.init()
+pygame.mixer.init()
+clock = pygame.time.Clock()
+
+# Game Window
 WIDTH = 1200
 HEIGHT = 700
-
 FPS = 60
+
+# Color variables
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GREY = "#808080"
+DARKBLUE = "#054569"
+OATYELLOW = "#f1e3bc"
+
+# System Messages
+WINNER_FONT = pygame.font.SysFont("comicsans", 100)
 
 class SceneBase:
     def __init__(self):
         self.list_of_scenes = {}
+        self.name = ""
         self.next = self
         self.previous = self
     
@@ -112,17 +128,18 @@ class Button:
 class Settings(SceneBase):
     def __init__(self):
         SceneBase.__init__(self)                
-        self.setting_bg = pygame.transform.scale(pygame.image.load(os.path.join("Assets","Setting_BG.jpg")), (WIDTH, HEIGHT))
+        self.setting_bg = pygame.transform.scale(pygame.image.load(os.path.join("Assets","Setting_BG.jpg")), (WIDTH, HEIGHT))        
 
         self.start_pos = (WIDTH//6*5, HEIGHT)        
         self.button_width = 200
         self.button_height = 40
         self.button_elevation = 5        
         
-        self.button_list = {}
+        self.button_list = {}        
         self.button_list['Back'] = Button('Back', cb=self.Back)
+        self.button_list['Reset Multi'] = Button('Reset Game', cb=self.ResetGameMulti)
         self.button_list['Game Sound'] = Button('Game Sound')                
-        self.button_list['Exit'] = Button('Exit', cb=self.ExitSettings)
+        self.button_list['Main Menu'] = Button('Main Menu', cb=self.ExitSettings)        
 
         self.offset = (self.start_pos[1] - (len(self.button_list) * self.button_height)) // (len(self.button_list) + 1)
     
@@ -140,11 +157,20 @@ class Settings(SceneBase):
         x = self.start_pos[0] - (self.button_width // 2)
         for button in self.button_list:            
             button_pos = (x, index * self.offset)
-            self.button_list[button].draw(screen, self.button_width, self.button_height, button_pos, self.button_elevation)
-            index += 1            
+            if button == 'Restart Multi':                                    
+                if self.previous.name == "game_multi":
+                    self.button_list[button].draw(screen, self.button_width, self.button_height, button_pos, self.button_elevation)
+                    index += 1
+            else:                
+                self.button_list[button].draw(screen, self.button_width, self.button_height, button_pos, self.button_elevation)
+                index += 1            
     
     def Back(self):
         self.SwitchToScene(self.previous)
     
     def ExitSettings(self):
         self.SwitchToScene(self.list_of_scenes["start_scene"])
+    
+    def ResetGameMulti(self):
+        self.list_of_scenes["game_multi"].ResetGame()
+        self.SwitchToScene(self.previous)

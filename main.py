@@ -4,18 +4,20 @@ from settings import *
 from start_scene import StartScene
 from game import *
 
-pygame.init()
-clock = pygame.time.Clock()
-
 START_SCENE = StartScene()
 START_SCENE.clock = clock
+START_SCENE.name = "start_scene"
+
 SETTINGS = Settings()
+SETTINGS.name = "settings"
+
 GAME_MULTI = GameMulti()
+GAME_MULTI.name = "game_multi"
 
 SCENES = {
-    "start_scene": START_SCENE,
-    "settings": SETTINGS,
-    "game_multi": GAME_MULTI,
+    START_SCENE.name: START_SCENE,
+    SETTINGS.name: SETTINGS,
+    GAME_MULTI.name: GAME_MULTI,
 }
 
 START_SCENE.list_of_scenes = SCENES
@@ -23,9 +25,9 @@ SETTINGS.list_of_scenes = SCENES
 GAME_MULTI.list_of_scenes = SCENES
 
 def main(starting_scene):        
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("BUM BUM CHIU")        
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))            
     active_scene = starting_scene
+    pygame.display.set_caption("BUM BUM CHIU")
 
     while active_scene != None:
         pressed_keys = pygame.key.get_pressed()
@@ -57,4 +59,4 @@ def main(starting_scene):
         clock.tick(FPS)
 
 if __name__ == '__main__':
-    main(GAME_MULTI)
+    main(START_SCENE)
