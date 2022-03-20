@@ -3,7 +3,7 @@ from settings import Button, WIDTH, HEIGHT, SceneBase
 class StartScene(SceneBase):
     def __init__(self):
         SceneBase.__init__(self)            
-        self.setting_bg = pygame.transform.scale(pygame.image.load(os.path.join("Assets","start_bg.jpg")), (WIDTH, HEIGHT))
+        self.setting_bg = pygame.transform.scale(pygame.image.load(os.path.join("Assets/Backgrounds","start_bg.jpg")), (WIDTH, HEIGHT))
         self.logo = [ pygame.transform.scale(pygame.image.load(os.path.join("Assets/Game-logo",f"frame_{i}_delay-0.15s.png")), (600,100)) for i in range(6) ]
         self.logo_pos = (100, 300)
         self.logo_frame = 0

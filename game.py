@@ -4,8 +4,9 @@ from game_elements import *
 
 class GameMulti(SceneBase):
     def __init__(self):
-        SceneBase.__init__(self)        
-        self.game_bg = pygame.transform.scale(pygame.image.load(os.path.join("Assets","space.png")), (WIDTH, HEIGHT))
+        SceneBase.__init__(self) 
+        self.bg_index = 0       
+        self.game_bg = pygame.transform.scale(pygame.image.load(os.path.join("Assets/Backgrounds","7.jpg")), (WIDTH, HEIGHT))
         self.game_border = pygame.Rect(WIDTH//2 - 5, 0, 10, HEIGHT)
 
         self.stop_input = False
@@ -15,13 +16,13 @@ class GameMulti(SceneBase):
         self.initilaization = False
         self.setupSpaceship = False
 
-        self.system_btn_list = {}
-        self.system_btn_pos = (500, 450)
-        self.system_btn_size = (200, 40)
-        self.system_btn_offset = 100
-        self.system_btn_elevation = 5
-        self.system_btn_list["Restart"] = Button("Restart", cb=self.RestartGame)                         
-        self.system_btn_list["Reset"] = Button("Reset", cb=self.ResetGame)                         
+        self.endgame_btn_list = {}
+        self.endgame_btn_size = (200, 40)
+        self.endgame_btn_pos = (WIDTH/2 - 100, 450)        
+        self.endgame_btn_offset = 100
+        self.endgame_btn_elevation = 5
+        self.endgame_btn_list["Restart"] = Button("Restart", cb=self.RestartGame)                         
+        self.endgame_btn_list["Reset"] = Button("Reset", cb=self.ResetGame)                         
 
     def InitPlayer(self):                
         if not self.initilaization:
@@ -58,7 +59,18 @@ class GameMulti(SceneBase):
             self.stop_input = True            
         if WINNER_INFO:
             screen.blit(WINNER_INFO, ((WIDTH - WINNER_INFO.get_width())//2, (HEIGHT - WINNER_INFO.get_height())//2))            
-            self.DrawButton(screen, self.system_btn_list, self.system_btn_pos, self.system_btn_size, self.system_btn_elevation, self.system_btn_offset)            
+            self.DrawButton(screen, self.endgame_btn_list, self.endgame_btn_pos, self.endgame_btn_size, self.endgame_btn_elevation, self.endgame_btn_offset)            
+    
+    def StartGameCountDown(self, screen):
+        self.stop_input = True
+        COUNTDOWN = WINNER_FONT.render("READY !!!", 1, WHITE)
+        pass
+    
+    def ChangeBG(self):
+        self.bg_index += 1
+        if self.bg_index >= 8:
+            self.bg_index = 1        
+        self.game_bg = pygame.transform.scale(pygame.image.load(os.path.join("Assets/Backgrounds",f"{self.bg_index}.jpg")), (WIDTH, HEIGHT))
 
     def ProcessInput(self, events, pressed_keys):        
         if self.setupSpaceship and not self.stop_input:
@@ -71,7 +83,7 @@ class GameMulti(SceneBase):
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_KP0 and self.setupSpaceship:                
                     self.player_2.shooting()
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_f and self.setupSpaceship:                
-                    self.player_1.shooting()
+                    self.player_1.shooting()                                    
     
     def Update(self):
         if not self.setupSpaceship:
@@ -85,18 +97,18 @@ class GameMulti(SceneBase):
         if self.setupSpaceship:
             # pygame.draw.rect(screen, DARKBLUE, self.player_1.rect)
             # pygame.draw.rect(screen, DARKBLUE, self.player_2.rect)
-            self.players.draw(screen)   
-            self.player_1.aim_target(screen, self.player_2)
-            self.player_2.aim_target(screen, self.player_1)            
+            self.players.draw(screen)                           
             screen.blit(self.player_1.name_surface, self.player_1.name_text_rect)        
             screen.blit(self.player_2.name_surface, self.player_2.name_text_rect)
             self.player_1.HP_bar.draw(screen, self.player_1.HP)        
             self.player_2.HP_bar.draw(screen, self.player_2.HP)
+            self.player_1.aim_target(screen, self.player_2)
+            self.player_2.aim_target(screen, self.player_1)
             self.Winable(screen)                     
     
     def RestartGame(self):        
-        self.player_1.RotateSpaceship()        
-        self.player_2.RotateSpaceship()
+        self.player_1.Ready()        
+        self.player_2.Ready()
         self.stop_input = False
     
     def ResetGame(self):

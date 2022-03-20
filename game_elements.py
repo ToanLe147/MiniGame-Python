@@ -3,27 +3,22 @@ from pygame.locals import *
 from settings import *
 from debug import *
 
-# Sound effects
-EARTH_FIRE_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","shoot-medium_10.wav"))
-ALIEN_FIRE_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","shoot-large_4.wav"))
-SMALL_FIRE_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","shoot-small_1.wav"))
-EXPLOSION_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","Grenade+1.mp3"))
-
 class Initialize(SceneBase):
     def __init__(self, side):        
         SceneBase.__init__(self)
         self.side = side  # LEFT or RIGHT
-        self.scene_bg = pygame.transform.scale(pygame.image.load(os.path.join("Assets", "shipyard_bg.jpg")), (WIDTH, HEIGHT))        
-        self.scene_logo = pygame.transform.scale(pygame.image.load(os.path.join("Assets", "SpaceFactory.png")), (300,148))
+        self.scene_bg = pygame.transform.scale(pygame.image.load(os.path.join("Assets/Backgrounds", "shipyard_bg.jpg")), (WIDTH, HEIGHT))        
+        self.scene_logo = pygame.transform.scale(pygame.image.load(os.path.join("Assets/Icons", "SpaceFactory.png")), (300,148))
         self.scene_logo_pos = (50, 50)
-        self.shipList_logo = pygame.transform.scale(pygame.image.load(os.path.join("Assets", "spaceshipList-blue.png")), (250,52))
+        self.shipList_logo = pygame.transform.scale(pygame.image.load(os.path.join("Assets/Icons", "spaceshipList-blue.png")), (250,52))
         self.shipList_logo_pos = (400, 100)        
-        self.nameSection_logo = pygame.transform.scale(pygame.image.load(os.path.join("Assets", "name-section1.png")), (150,50))
+        self.nameSection_logo = pygame.transform.scale(pygame.image.load(os.path.join("Assets/Icons", "name-section1.png")), (150,50))
         self.nameSection_logo_pos = (125, 240)        
         print(f"Player {side}")
         
         # ============ EDIT NAME SECTION ==================
         self.edit_name_trigger = False
+        self.stop_input_name = False
         self.name_confirm = False        
         self.name_rect_pos = (100, 300)                
         self.name_rect_size = (200, 40)               
@@ -99,11 +94,7 @@ class Initialize(SceneBase):
         # debugImg(self.preview_spaceship.image, pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
 
     ### ============ EDIT NAME SECTION ==================        
-    def InputName(self, event):        
-        if self.name.__len__() >= 16:
-            self.edit_name_trigger = False                                
-            print("Name too long now")
-            return                    
+    def InputName(self, event):                                               
         if self.edit_name_trigger and not self.name_confirm:            
             if event.key == K_BACKSPACE:
                 self.name = self.name[:-1]
@@ -112,8 +103,13 @@ class Initialize(SceneBase):
                 self.edit_name_trigger = False
                 print("Press Enter")
                 print(f"{self.name}")
-            else:
+            elif not self.stop_input_name:
                 self.name += event.unicode                
+        if self.name.__len__() >= 16:                                            
+            self.stop_input_name = True                                
+            print("Name too long now")
+        else:
+            self.stop_input_name = False                                            
 
     def EditName(self):
         self.edit_name_trigger = True
@@ -129,7 +125,7 @@ class Initialize(SceneBase):
     def AcceptSpaceship(self):        
         self.preview_spaceship.name = self.name
         self.preview_spaceship.side = self.side
-        self.preview_spaceship.RotateSpaceship()        
+        self.preview_spaceship.Ready()        
         self.spaceship = self.preview_spaceship
         if self.spaceship.type != "basic" and self.spaceship.ready:
             self.SwitchToScene(self.previous)
@@ -166,9 +162,7 @@ class Initialize(SceneBase):
             ratio = img.get_width() / img.get_height()
             size = (self.preview_rect_size[0]*ratio-10,self.preview_rect_size[1]-10)            
         self.preview_img = pygame.transform.scale(img, size)
-        self.name = self.preview_spaceship.name
-
-        
+        self.name = self.preview_spaceship.name        
 
     ### ============ UTILITY =================
     def DrawButton(self, screen, button_list, start_pos, button_size, elevation, offset):
@@ -205,20 +199,31 @@ class Initialize(SceneBase):
         preview_bulletVel.draw(screen, self.preview_spaceship.bulletVel)        
     
 class Effect():
-    def __init__(self, side, type, max_frame, size=None, effect="bullet"):
+    def __init__(self, side, type, max_frame, size=None, effect="bullet", stop=False):
         self.SelectEffect(effect)
-        self.bullet_index = 0.0
-        self.animation_speed = 0.25                
+        self.clock = clock
+        self.img_index = 0.0
+        self.animation_speed = 1 / max_frame                
         self.img_list = self.AddImg(type, max_frame, side, size)
-        self.img = self.img_list[int(self.bullet_index)]        
+        self.img = self.img_list[int(self.img_index)]        
         self.img_rect = self.img.get_rect()
+        self.stop_animation = stop
     
-    def draw(self, screen):
-        self.img = self.img_list[int(self.bullet_index)]        
-        screen.blit(self.img, self.img_rect)
-        self.bullet_index += self.animation_speed
-        if self.bullet_index >= len(self.img_list):
-            self.bullet_index = 0
+    def StopAnimation(self):
+        if not self.stop_animation:
+            if self.img_index >= len(self.img_list):
+                self.img_index = 0
+            return False
+        else:
+            if self.img_index >= len(self.img_list):                
+                return True
+    
+    def draw(self, screen):        
+        if not self.StopAnimation():
+            self.img = self.img_list[int(self.img_index)]                
+            screen.blit(self.img, self.img_rect)
+            self.img_index += self.animation_speed
+            self.StopAnimation()
     
     def SelectEffect(self, effect):
         self.img_str = ["Bullets", "bul"]  # [effect folder, effect prefix]
@@ -231,7 +236,7 @@ class Effect():
         # if effect == "bullet":
         #     self.img_str = ["Bullets", "bul"]        
 
-    def BulletSize(self, img, size_unit):                
+    def EffectSize(self, img, size_unit):                
         size = (size_unit, size_unit)
         if img.get_width() > img.get_height():
             ratio = img.get_height() / img.get_width()
@@ -246,13 +251,16 @@ class Effect():
         for i in range(1,max_frame+1):
             img = pygame.image.load(os.path.join(f"Assets/{self.img_str[0]}/{type}",f"{self.img_str[1]}{i}.png"))
             if size:
-                img_size = self.BulletSize(img, size)
+                img_size = self.EffectSize(img, size)
                 img = pygame.transform.scale(img, img_size)            
             if side != "LEFT":            
                 img_list.append(pygame.transform.flip(img, True, False))
             else:
                 img_list.append(img)
-        return img_list                
+        return img_list
+
+    def SequenceEffect(self):
+        pass
 
 class SpaceShip(pygame.sprite.Sprite):
     def __init__(self, type="basic"):
@@ -262,7 +270,9 @@ class SpaceShip(pygame.sprite.Sprite):
         self.position = [0,0]
         self.name_font = pygame.font.Font(None, 30)   
         self.HP_bar_size = (250, 20)   
-        self.HP_bar_pos = (0, 0)                              
+        self.HP_bar_pos = (0, 0)
+        self.explosions = []        
+        self.explosion_sound = EXPLOSION_SOUND              
         
         # Basic attributes
         self.org_HP = 100
@@ -311,43 +321,47 @@ class SpaceShip(pygame.sprite.Sprite):
         self.HP_bar = VisualBar(self.HP_bar_pos, self.HP_bar_size, self.HP, self.HP_max)                        
 
     def got_hit(self, damage):
-        if not self.explosion_frame:
-            self.explosion_frame = 1
-        EXPLOSION_SOUND.play()                      
+        EXPLOSION = Effect(self.side, "exp2", 11, 100, effect="explosion", stop=True)
+        self.explosion_sound.play()        
+        self.explosions.append(EXPLOSION)                    
         self.HP -= damage  
 
     def shooting(self):
+        self.shooting_sound.play()
         BULLET = Effect(self.side, self.bullet[0], self.bullet[1], self.bullet[2])
+        # BULLET = self.explosion
         BULLET.img_rect.center = self.rect.center
         if self.bullets.__len__() < self.maxBullets:
-            self.bullets.append(BULLET)
-            self.shooting_sound.play()
+            self.bullets.append(BULLET)            
 
     def aim_target(self, screen, opponent):
+        for explosion in self.explosions:        
+            if explosion.StopAnimation():
+                self.explosions.remove(explosion)
+                continue
+            explosion.img_rect.center = self.rect.center
+            explosion.draw(screen)
         for bullet in self.bullets:            
             if self.side == "LEFT":                                
                 bullet.img_rect.x += self.bulletVel                                                
-                if opponent.rect.colliderect(bullet.img_rect):
-                    opponent.got_hit(self.bulletDamage)
+                if opponent.rect.colliderect(bullet.img_rect):                                                            
+                    opponent.got_hit(self.bulletDamage)                    
                     self.bullets.remove(bullet)
                 elif bullet.img_rect.x > WIDTH:            
                     self.bullets.remove(bullet)
                 bullet.draw(screen)
             else:                
                 bullet.img_rect.x -= self.bulletVel                                
-                if opponent.rect.colliderect(bullet.img_rect):
+                if opponent.rect.colliderect(bullet.img_rect):                    
                     opponent.got_hit(self.bulletDamage)
                     self.bullets.remove(bullet)
                 elif bullet.img_rect.x < 0:            
                     self.bullets.remove(bullet)                    
                 bullet.draw(screen)
-    
-    def got_hit(self, damage):
-        self.HP -= damage
-    
-    def RotateSpaceship(self):        
+        
+    def Ready(self):        
         if self.type != "Basic Prototype":            
-            self.name_surface = self.name_font.render(self.name, True, OATYELLOW)            
+            self.name_surface = self.name_font.render(self.name, True, OATYELLOW)                                    
             if self.HP != self.HP_max:
                 self.HP = self.HP_max
             if self.side == "LEFT":
@@ -357,7 +371,7 @@ class SpaceShip(pygame.sprite.Sprite):
                     self.ready = True                                    
                 self.name_text_rect = self.name_surface.get_rect(topleft=(0,0))
                 self.HP_bar_pos = (self.name_text_rect.right + 5, 0)                                        
-                self.position = [WIDTH/4, HEIGHT/2]                                                        
+                self.position = [WIDTH/4, HEIGHT/2]                                                                        
             elif self.side == "RIGHT":
                 if not self.ready:
                     self.image = pygame.transform.rotate(self.image, 90)
@@ -365,9 +379,9 @@ class SpaceShip(pygame.sprite.Sprite):
                     self.ready = True                    
                 self.name_text_rect = self.name_surface.get_rect(topright=(WIDTH,0))
                 self.HP_bar_pos = (self.name_text_rect.left - self.HP_bar_size[0] - 5, 0)
-                self.position = [WIDTH/4*3, HEIGHT/2]                                
+                self.position = [WIDTH/4*3, HEIGHT/2]                
             else:
-                pass                
+                pass                                        
 
     def GetSpaceShipSize(self, delta_unit=0):
         img = pygame.image.load(self.spaceship_image_path).convert_alpha()
@@ -404,7 +418,7 @@ class SpaceShip(pygame.sprite.Sprite):
         self.image, self.shipSize = self.GetSpaceShipSize()
         self.rect = self.image.get_rect()
         self.shooting_sound = ALIEN_FIRE_SOUND
-        self.bullet = ("bullet6", 4, 70)        
+        self.bullet = ("bullet6", 4, 70)                        
         # Basic attributes
         self.HP = self.org_HP - 40       
         self.HP_max = self.HP

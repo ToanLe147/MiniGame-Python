@@ -6,8 +6,8 @@ pygame.mixer.init()
 clock = pygame.time.Clock()
 
 # Game Window
-WIDTH = 1200
-HEIGHT = 700
+WIDTH = 1368
+HEIGHT = 720
 FPS = 60
 
 # Color variables
@@ -15,10 +15,27 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREY = "#808080"
 DARKBLUE = "#054569"
+LIGHTBLUE = "#8ecae6"
+MIDBLUE = "#219ebc"
 OATYELLOW = "#f1e3bc"
+HONEYYELLOW = "#ffb703"
+ORANGE = "#fb8500"
+
 
 # System Messages
 WINNER_FONT = pygame.font.SysFont("comicsans", 100)
+
+# Sound effects
+EARTH_FIRE_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","shoot-medium_10.wav"))
+ALIEN_FIRE_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","shoot-large_4.wav"))
+SMALL_FIRE_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","shoot-small_1.wav"))
+EXPLOSION_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","Grenade+1.mp3"))
+
+class SoundControl(pygame.mixer.Sound):
+    def __init__(self):
+        super.__init__()
+        # TODO: how to manage sound in setting menu
+
 
 class SceneBase:
     def __init__(self):
@@ -128,16 +145,18 @@ class Button:
 class Settings(SceneBase):
     def __init__(self):
         SceneBase.__init__(self)                
-        self.setting_bg = pygame.transform.scale(pygame.image.load(os.path.join("Assets","Setting_BG.jpg")), (WIDTH, HEIGHT))        
+        self.setting_bg = pygame.transform.scale(pygame.image.load(os.path.join("Assets/Backgrounds","Setting_BG.jpg")), (WIDTH, HEIGHT))        
 
-        self.start_pos = (WIDTH//6*5, HEIGHT)        
-        self.button_width = 200
+        self.start_pos = (WIDTH/5*4, HEIGHT)        
+        self.button_width = 250
         self.button_height = 40
         self.button_elevation = 5        
         
         self.button_list = {}        
         self.button_list['Back'] = Button('Back', cb=self.Back)
-        self.button_list['Reset Multi'] = Button('Reset Game', cb=self.ResetGameMulti)
+        self.button_list['Restart Game'] = Button('Restart Game', cb=self.RestartGameMulti)
+        self.button_list['Reset Game'] = Button('Reset Game', cb=self.ResetGameMulti)        
+        self.button_list['Change Background'] = Button('Change Background', cb=self.ChangeBackground)
         self.button_list['Game Sound'] = Button('Game Sound')                
         self.button_list['Main Menu'] = Button('Main Menu', cb=self.ExitSettings)        
 
@@ -157,7 +176,15 @@ class Settings(SceneBase):
         x = self.start_pos[0] - (self.button_width // 2)
         for button in self.button_list:            
             button_pos = (x, index * self.offset)
-            if button == 'Restart Multi':                                    
+            if button == 'Reset Game':                                    
+                if self.previous.name == "game_multi":
+                    self.button_list[button].draw(screen, self.button_width, self.button_height, button_pos, self.button_elevation)
+                    index += 1
+            elif button == 'Change Background':
+                if self.previous.name == "game_multi":
+                    self.button_list[button].draw(screen, self.button_width, self.button_height, button_pos, self.button_elevation)
+                    index += 1
+            elif button == 'Restart Game':
                 if self.previous.name == "game_multi":
                     self.button_list[button].draw(screen, self.button_width, self.button_height, button_pos, self.button_elevation)
                     index += 1
@@ -172,5 +199,13 @@ class Settings(SceneBase):
         self.SwitchToScene(self.list_of_scenes["start_scene"])
     
     def ResetGameMulti(self):
-        self.list_of_scenes["game_multi"].ResetGame()
+        self.list_of_scenes[self.previous.name].ResetGame()
+        self.SwitchToScene(self.previous)
+
+    def RestartGameMulti(self):
+        self.list_of_scenes[self.previous.name].RestartGame()
+        self.SwitchToScene(self.previous)
+    
+    def ChangeBackground(self):
+        self.list_of_scenes[self.previous.name].ChangeBG()
         self.SwitchToScene(self.previous)
