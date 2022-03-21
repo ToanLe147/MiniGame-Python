@@ -22,7 +22,7 @@ class GameMulti(SceneBase):
         self.endgame_btn_offset = 100
         self.endgame_btn_elevation = 5
         self.endgame_btn_list["Restart"] = Button("Restart", cb=self.RestartGame)                         
-        self.endgame_btn_list["Reset"] = Button("Reset", cb=self.ResetGame)                         
+        self.endgame_btn_list["Reset"] = Button("Reset", cb=self.ResetGame)                             
 
     def InitPlayer(self):                
         if not self.initilaization:
@@ -47,7 +47,17 @@ class GameMulti(SceneBase):
             if self.player_1.type != "basic" and self.player_2.type != "basic":            
                 self.players.add(self.player_1)
                 self.players.add(self.player_2)
-                self.setupSpaceship = True    
+                self.setupSpaceship = True  
+
+    def testEffect(self):        
+        self.player_1.explosion_effect += 1
+        self.player_2.explosion_effect += 1        
+        if self.player_1.explosion_effect > 8:
+            self.player_1.explosion_effect = 1
+        if self.player_2.explosion_effect > 8:
+            self.player_2.explosion_effect = 1        
+        self.player_1.got_hit(0)
+        self.player_2.got_hit(0)        
 
     def Winable(self, screen):
         WINNER_INFO = None
@@ -84,6 +94,8 @@ class GameMulti(SceneBase):
                     self.player_2.shooting()
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_f and self.setupSpaceship:                
                     self.player_1.shooting()                                    
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN and self.setupSpaceship:                
+                    self.testEffect()                                    
     
     def Update(self):
         if not self.setupSpaceship:

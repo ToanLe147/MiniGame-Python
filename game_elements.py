@@ -199,12 +199,13 @@ class Initialize(SceneBase):
         preview_bulletVel.draw(screen, self.preview_spaceship.bulletVel)        
     
 class Effect():
-    def __init__(self, side, type, max_frame, size=None, effect="bullet", stop=False):
-        self.SelectEffect(effect)
+    def __init__(self, side, type, size=None, effect="bullet", stop=False):
+        self.SelectEffect(effect)                
+        self.max_frame = len( next(os.walk(os.path.join(f"Assets/{self.img_str[0]}", f"{type}")))[2] )
         self.clock = clock
         self.img_index = 0.0
-        self.animation_speed = 1 / max_frame                
-        self.img_list = self.AddImg(type, max_frame, side, size)
+        self.animation_speed = 1 / self.max_frame                
+        self.img_list = self.AddImg(type, self.max_frame, side, size)
         self.img = self.img_list[int(self.img_index)]        
         self.img_rect = self.img.get_rect()
         self.stop_animation = stop
@@ -272,7 +273,8 @@ class SpaceShip(pygame.sprite.Sprite):
         self.HP_bar_size = (250, 20)   
         self.HP_bar_pos = (0, 0)
         self.explosions = []        
-        self.explosion_sound = EXPLOSION_SOUND              
+        self.explosion_sound = EXPLOSION_SOUND 
+        self.explosion_effect = 3
         
         # Basic attributes
         self.org_HP = 100
@@ -320,16 +322,15 @@ class SpaceShip(pygame.sprite.Sprite):
         self.rect.center = tuple(self.position)
         self.HP_bar = VisualBar(self.HP_bar_pos, self.HP_bar_size, self.HP, self.HP_max)                        
 
-    def got_hit(self, damage):
-        EXPLOSION = Effect(self.side, "exp2", 11, 100, effect="explosion", stop=True)
+    def got_hit(self, damage):        
+        EXPLOSION = Effect(self.side, f"exp{self.explosion_effect}", 100, effect="explosion", stop=True)        
         self.explosion_sound.play()        
         self.explosions.append(EXPLOSION)                    
         self.HP -= damage  
 
     def shooting(self):
         self.shooting_sound.play()
-        BULLET = Effect(self.side, self.bullet[0], self.bullet[1], self.bullet[2])
-        # BULLET = self.explosion
+        BULLET = Effect(self.side, self.bullet[0], self.bullet[1])        
         BULLET.img_rect.center = self.rect.center
         if self.bullets.__len__() < self.maxBullets:
             self.bullets.append(BULLET)            
@@ -418,7 +419,7 @@ class SpaceShip(pygame.sprite.Sprite):
         self.image, self.shipSize = self.GetSpaceShipSize()
         self.rect = self.image.get_rect()
         self.shooting_sound = ALIEN_FIRE_SOUND
-        self.bullet = ("bullet6", 4, 70)                        
+        self.bullet = ("bullet6", 70)                        
         # Basic attributes
         self.HP = self.org_HP - 40       
         self.HP_max = self.HP
@@ -435,7 +436,7 @@ class SpaceShip(pygame.sprite.Sprite):
         self.image, self.shipSize = self.GetSpaceShipSize(20)
         self.rect = self.image.get_rect()
         self.shooting_sound = EARTH_FIRE_SOUND
-        self.bullet = ("bullet5", 5, 70)
+        self.bullet = ("bullet5", 70)
         # Basic attributes
         self.HP = self.org_HP - 40        
         self.HP_max = self.HP
@@ -452,7 +453,7 @@ class SpaceShip(pygame.sprite.Sprite):
         self.image, self.shipSize = self.GetSpaceShipSize(50)
         self.rect = self.image.get_rect()
         self.shooting_sound = SMALL_FIRE_SOUND
-        self.bullet = ("bullet4", 4, 50)
+        self.bullet = ("bullet4", 50)
         # Basic attributes
         self.HP = self.org_HP - 65     
         self.HP_max = self.HP  
@@ -469,7 +470,7 @@ class SpaceShip(pygame.sprite.Sprite):
         self.image, self.shipSize = self.GetSpaceShipSize(-30)
         self.rect = self.image.get_rect()
         self.shooting_sound = EARTH_FIRE_SOUND
-        self.bullet = ("bullet2", 6, 80)
+        self.bullet = ("bullet2", 80)
         # Basic attributes
         self.HP = self.org_HP - 15       
         self.HP_max = self.HP
@@ -487,7 +488,7 @@ class SpaceShip(pygame.sprite.Sprite):
         self.image, self.shipSize = self.GetSpaceShipSize(-50)
         self.rect = self.image.get_rect()
         self.shooting_sound = ALIEN_FIRE_SOUND
-        self.bullet = ("bullet3", 6, 100)
+        self.bullet = ("bullet3", 100)
         # Basic attributes
         self.HP = self.org_HP       
         self.HP_max = self.HP 

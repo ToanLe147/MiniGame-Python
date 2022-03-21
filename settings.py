@@ -12,6 +12,8 @@ FPS = 60
 
 # Color variables
 WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+DARKRED = "#480113"
 BLACK = (0, 0, 0)
 GREY = "#808080"
 DARKBLUE = "#054569"
