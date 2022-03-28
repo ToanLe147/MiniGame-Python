@@ -166,12 +166,7 @@ class Initialize(SceneBase):
 
     ### ============ UTILITY =================
     def DrawButton(self, screen, button_list, start_pos, button_size, elevation, offset):
-        index = 0
-        x = start_pos[0]
-        for button in button_list:
-            new_button_pos = (x, start_pos[1] + index * offset)
-            button_list[button].draw(screen, button_size[0], button_size[1], new_button_pos, elevation)
-            index += 1
+        DrawButton(screen, button_list, start_pos, button_size, elevation, offset)    
     
     def DrawPreviewInfo(self, screen):
         offset = 45
@@ -370,16 +365,16 @@ class SpaceShip(pygame.sprite.Sprite):
                     self.image = pygame.transform.rotate(self.image, 270)
                     self.rect = self.image.get_rect()
                     self.ready = True                                    
-                self.name_text_rect = self.name_surface.get_rect(topleft=(0,0))
-                self.HP_bar_pos = (self.name_text_rect.right + 5, 0)                                        
+                self.name_text_rect = self.name_surface.get_rect(topleft=(0,5))
+                self.HP_bar_pos = (self.name_text_rect.right + 5, 5)                                        
                 self.position = [WIDTH/4, HEIGHT/2]                                                                        
             elif self.side == "RIGHT":
                 if not self.ready:
                     self.image = pygame.transform.rotate(self.image, 90)
                     self.rect = self.image.get_rect()
                     self.ready = True                    
-                self.name_text_rect = self.name_surface.get_rect(topright=(WIDTH,0))
-                self.HP_bar_pos = (self.name_text_rect.left - self.HP_bar_size[0] - 5, 0)
+                self.name_text_rect = self.name_surface.get_rect(topright=(WIDTH,5))
+                self.HP_bar_pos = (self.name_text_rect.left - self.HP_bar_size[0] - 5, 5)
                 self.position = [WIDTH/4*3, HEIGHT/2]                
             else:
                 pass                                        

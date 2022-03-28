@@ -39,6 +39,13 @@ class SoundControl(pygame.mixer.Sound):
         # TODO: how to manage sound in setting menu
 
 
+def DrawButton(screen, button_list, start_pos, button_size, elevation, offset):
+    index = 0
+    x = start_pos[0]
+    for button in button_list:
+        new_button_pos = (x, start_pos[1] + index * offset)
+        button_list[button].draw(screen, button_size[0], button_size[1], new_button_pos, elevation)
+        index += 1
 class SceneBase:
     def __init__(self):
         self.list_of_scenes = {}

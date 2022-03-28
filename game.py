@@ -8,6 +8,9 @@ class GameMulti(SceneBase):
         self.bg_index = 0       
         self.game_bg = pygame.transform.scale(pygame.image.load(os.path.join("Assets/Backgrounds","7.jpg")), (WIDTH, HEIGHT))
         self.game_border = pygame.Rect(WIDTH//2 - 5, 0, 10, HEIGHT)
+        
+        self.ready_time = 0
+        self.quit_countdown = False
 
         self.stop_input = False
 
@@ -71,10 +74,24 @@ class GameMulti(SceneBase):
             screen.blit(WINNER_INFO, ((WIDTH - WINNER_INFO.get_width())//2, (HEIGHT - WINNER_INFO.get_height())//2))            
             self.DrawButton(screen, self.endgame_btn_list, self.endgame_btn_pos, self.endgame_btn_size, self.endgame_btn_elevation, self.endgame_btn_offset)            
     
-    def StartGameCountDown(self, screen):
-        self.stop_input = True
+    def StartGameCountDown(self, screen):        
+        current_time = clock.tick()
+        self.stop_input = True        
         COUNTDOWN = WINNER_FONT.render("READY !!!", 1, WHITE)
-        pass
+        if not self.ready_time:
+            self.ready_time = clock.tick()            
+        else:
+            current_time = 0
+        
+        if current_time - self.ready_time >= 1:                            
+            COUNTDOWN = WINNER_FONT.render(f"-- {1} --", 1, WHITE)
+        elif current_time - self.ready_time >= 2:
+            COUNTDOWN = WINNER_FONT.render(f"-- {2} --", 1, WHITE)
+        elif current_time - self.ready_time >= 3:
+            COUNTDOWN = WINNER_FONT.render(f"-- {3} --", 1, WHITE)
+        else:
+            COUNTDOWN = WINNER_FONT.render(f"FIGHT !!!", 1, WHITE)            
+        screen.blit(COUNTDOWN, ((WIDTH - COUNTDOWN.get_width())//2, (HEIGHT - COUNTDOWN.get_height())//2))        
     
     def ChangeBG(self):
         self.bg_index += 1
