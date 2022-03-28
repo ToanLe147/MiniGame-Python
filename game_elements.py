@@ -1,7 +1,6 @@
 import pygame, os
 from pygame.locals import *
 from settings import *
-from debug import *
 
 class Initialize(SceneBase):
     def __init__(self, side):        
