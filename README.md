@@ -2,6 +2,9 @@
 A simple Space Shooting for 2 players (same PC).
 
 # Usage
+## WINDOW USER
+run **bumbumchiu.exe** to play
+## UBUNTU 18.04
 Install **pipenv**
 ```
 pip install pipenv
