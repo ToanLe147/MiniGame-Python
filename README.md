@@ -51,5 +51,5 @@ python3 main.py
         height="340"
         src="Assets/Screenshots/game-screenshot-3.png"
     >
-    <figcaption>Pic.3 - Let's shooting eachother.</figcaption>
+    <figcaption>Pic.3 - Let's shoot eachother.</figcaption>
 </figure>
