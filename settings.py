@@ -27,11 +27,12 @@ ORANGE = "#fb8500"
 # System Messages
 WINNER_FONT = pygame.font.SysFont("comicsans", 100)
 
+cwd = os.getcwd()
 # Sound effects
-EARTH_FIRE_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","shoot-medium_10.wav"))
-ALIEN_FIRE_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","shoot-large_4.wav"))
-SMALL_FIRE_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","shoot-small_1.wav"))
-EXPLOSION_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","Grenade+1.mp3"))
+EARTH_FIRE_SOUND = pygame.mixer.Sound(os.path.join(cwd, "Assets","Sounds","shoot-medium_10.wav"))
+ALIEN_FIRE_SOUND = pygame.mixer.Sound(os.path.join(cwd, "Assets","Sounds","shoot-large_4.wav"))
+SMALL_FIRE_SOUND = pygame.mixer.Sound(os.path.join(cwd, "Assets","Sounds","shoot-small_1.wav"))
+EXPLOSION_SOUND = pygame.mixer.Sound(os.path.join(cwd, "Assets","Sounds","Grenade+1.wav"))
 
 class SoundControl(pygame.mixer.Sound):
     def __init__(self):
@@ -46,6 +47,7 @@ def DrawButton(screen, button_list, start_pos, button_size, elevation, offset):
         new_button_pos = (x, start_pos[1] + index * offset)
         button_list[button].draw(screen, button_size[0], button_size[1], new_button_pos, elevation)
         index += 1
+        
 class SceneBase:
     def __init__(self):
         self.list_of_scenes = {}
