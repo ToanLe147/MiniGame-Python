@@ -2,6 +2,8 @@
 A simple Space Shooting for 2 players (same PC).
 
 # Usage
+## WEB
+You can play this game from [BumBumChiu GitHub Pages](https://toanle147.github.io/MiniGame-Python/).
 ## WINDOW USER
 run **bumbumchiu.exe** to play
 ## UBUNTU 18.04
