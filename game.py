@@ -107,7 +107,7 @@ class GameMulti(SceneBase):
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:                
                 self.SwitchToScene(self.list_of_scenes["settings"])
             if not self.stop_input:
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_KP0 and self.setupSpaceship:                
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_RCTRL and self.setupSpaceship:                
                     self.player_2.shooting()
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_f and self.setupSpaceship:                
                     self.player_1.shooting()                                    
