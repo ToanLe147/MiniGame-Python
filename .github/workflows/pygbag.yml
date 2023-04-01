@@ -1,9 +1,12 @@
 name: pygbag_build
-on: push
+on:
+  pull_request:
+    branches:
+      - main
 
 jobs:  
   build-pygbag:
-    name: Test-pygbag
+    name: Deploy-to-gh-pages
     runs-on: ubuntu-latest
 
     steps:
