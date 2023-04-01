@@ -18,7 +18,7 @@ class StartScene(SceneBase):
         # self.button_list['Campaign'] = Button('Campaign')
         self.button_list['1 vs 1'] = Button('1 vs 1', cb=self.GameMulti)
         self.button_list['Settings'] = Button('Settings', cb=self.Settings)
-        self.button_list['Exit'] = Button('Exit', cb=self.Exit)
+        # self.button_list['Exit'] = Button('Exit', cb=self.Exit)
 
         self.offset = (self.start_pos[1] - (len(self.button_list) * self.button_height)) // (len(self.button_list) + 1)
     

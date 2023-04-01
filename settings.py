@@ -27,11 +27,29 @@ ORANGE = "#fb8500"
 # System Messages
 WINNER_FONT = pygame.font.SysFont("comicsans", 100)
 
+
 # Sound effects
 EARTH_FIRE_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","shoot-medium_10.wav"))
 ALIEN_FIRE_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","shoot-large_4.wav"))
 SMALL_FIRE_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","shoot-small_1.wav"))
 EXPLOSION_SOUND = pygame.mixer.Sound(os.path.join("Assets/Sounds","Grenade+1.mp3"))
+
+
+# Player controls
+class P1Ctrl:
+    left = pygame.K_a
+    right = pygame.K_d
+    up = pygame.K_w
+    down = pygame.K_s
+    shoot = pygame.K_f
+
+class P2Ctrl:
+    left = pygame.K_LEFT
+    right = pygame.K_RIGHT
+    up = pygame.K_UP
+    down = pygame.K_DOWN
+    shoot = pygame.K_RCTRL
+
 
 class SoundControl(pygame.mixer.Sound):
     def __init__(self):
