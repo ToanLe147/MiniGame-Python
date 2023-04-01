@@ -2,7 +2,7 @@ name: pygbag_build
 on:
   pull_request:
     branches:
-      - main
+      - master
 
 jobs:  
   build-pygbag:
