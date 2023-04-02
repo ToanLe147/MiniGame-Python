@@ -1,4 +1,4 @@
-import pygame
+import pygame, asyncio
 from pygame.locals import *
 from settings import *
 from start_scene import StartScene
@@ -10,6 +10,8 @@ START_SCENE.name = "start_scene"
 
 SETTINGS = Settings()
 SETTINGS.name = "settings"
+SETTINGS_CHANGEKEYS = ChangeKeysScene()
+SETTINGS_CHANGEKEYS.name = "change_keys"
 
 GAME_MULTI = GameMulti()
 GAME_MULTI.name = "game_multi"
@@ -17,14 +19,16 @@ GAME_MULTI.name = "game_multi"
 SCENES = {
     START_SCENE.name: START_SCENE,
     SETTINGS.name: SETTINGS,
+    SETTINGS_CHANGEKEYS.name: SETTINGS_CHANGEKEYS,
     GAME_MULTI.name: GAME_MULTI,
 }
 
 START_SCENE.list_of_scenes = SCENES
 SETTINGS.list_of_scenes = SCENES
+SETTINGS_CHANGEKEYS.list_of_scenes = SCENES
 GAME_MULTI.list_of_scenes = SCENES
 
-def main(starting_scene):        
+async def main(starting_scene):    
     screen = pygame.display.set_mode((WIDTH, HEIGHT))            
     active_scene = starting_scene
     pygame.display.set_caption("BUM BUM CHIU")
@@ -57,6 +61,7 @@ def main(starting_scene):
         
         pygame.display.flip()
         clock.tick(FPS)
+        await asyncio.sleep(0)
 
 if __name__ == '__main__':
-    main(START_SCENE)
+    asyncio.run(main(START_SCENE))

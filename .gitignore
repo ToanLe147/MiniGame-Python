@@ -1,5 +1,12 @@
-__pychache__/
+*/__pycache__/*
 *.pyc
 *.drawio
 test*
 debug*
+Lib/
+Scripts/
+Include/
+pyvenv.cfg
+build/
+venv/
+.vscode/

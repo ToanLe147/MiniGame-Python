@@ -294,23 +294,23 @@ class SpaceShip(pygame.sprite.Sprite):
     
     def control(self, key_pressed):        
         if self.side == "LEFT":             
-            if key_pressed[K_a] and self.rect.left - self.shipVel > 0:
+            if key_pressed[P1Ctrl.left] and self.rect.left - self.shipVel > 0:
                 self.position[0] -= self.shipVel                
-            if key_pressed[K_d] and self.rect.right + self.shipVel < WIDTH/2:
-                self.position[0] += self.shipVel            
-            if key_pressed[K_s] and self.rect.bottom + self.shipVel < HEIGHT:
-                self.position[1] += self.shipVel
-            if key_pressed[K_w] and self.rect.top - self.shipVel > 0:                
+            if key_pressed[P1Ctrl.right] and self.rect.right + self.shipVel < WIDTH/2:
+                self.position[0] += self.shipVel
+            if key_pressed[P1Ctrl.up] and self.rect.top - self.shipVel > 0:                
                 self.position[1] -= self.shipVel            
+            if key_pressed[P1Ctrl.down] and self.rect.bottom + self.shipVel < HEIGHT:
+                self.position[1] += self.shipVel                    
         else:        
-            if key_pressed[K_LEFT] and self.rect.left - self.shipVel > WIDTH/2:
+            if key_pressed[P2Ctrl.left] and self.rect.left - self.shipVel > WIDTH/2:
                 self.position[0] -= self.shipVel
-            if key_pressed[K_RIGHT] and self.rect.right + self.shipVel < WIDTH:
+            if key_pressed[P2Ctrl.right] and self.rect.right + self.shipVel < WIDTH:
                 self.position[0] += self.shipVel            
-            if key_pressed[K_DOWN] and self.rect.bottom + self.shipVel < HEIGHT:
-                self.position[1] += self.shipVel
-            if key_pressed[K_UP] and self.rect.top - self.shipVel > 0:
-                self.position[1] -= self.shipVel            
+            if key_pressed[P2Ctrl.up] and self.rect.top - self.shipVel > 0:
+                self.position[1] -= self.shipVel 
+            if key_pressed[P2Ctrl.down] and self.rect.bottom + self.shipVel < HEIGHT:
+                self.position[1] += self.shipVel                       
 
     def update(self):
         self.rect.center = tuple(self.position)
