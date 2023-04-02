@@ -15,7 +15,7 @@ run **main.py** to play game
 python3 main.py
 ```
 # Keys
-Here is the default control keys but you can change them later in the game.
+Here are the default control keys but you can change them later in the game.
 ## Player 1:
 - Move: W, A, S, D
 - Shoot: F
