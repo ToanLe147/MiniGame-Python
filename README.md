@@ -2,31 +2,26 @@
 A simple Space Shooting for 2 players (same PC).
 
 # Usage
-## WEB
+## On Web Browser
 You can play this game from [BumBumChiu GitHub Pages](https://toanle147.github.io/MiniGame-Python/).
-## WINDOW USER
-run **bumbumchiu.exe** to play
-## UBUNTU 18.04
-Install **pipenv**
+
+## On PC
+Install requirements
 ```
-pip install pipenv
-```
-Run pipenv shell for virtual env shell terminal and install dependencies for this game
-```
-pipenv shell
-pipenv install
+pip install -r requirements.txt
 ```
 run **main.py** to play game
 ```
 python3 main.py
 ```
 # Keys
+Here is the default control keys but you can change them later in the game.
 ## Player 1:
 - Move: W, A, S, D
 - Shoot: F
 ## Player 2:
 - Move: Arrow Up, Arrow Down, Arrow Left, Arrow Right
-- Shoot: Numpad-0 (if you don't have numpad keys then sorry 🥲 )
+- Shoot: Right Ctrl
 
 # Screenshots
 <figure align="center">
